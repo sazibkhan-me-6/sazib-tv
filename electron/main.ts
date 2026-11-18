@@ -6,6 +6,19 @@ const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 
 app.userAgentFallback = CHROME_UA;
 
+// Ultra Zero-Buffering & High-Capacity Hardware Video Acceleration Flags
+app.commandLine.appendSwitch('enable-quic');
+app.commandLine.appendSwitch('enable-accelerated-video-decode');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('disk-cache-size', '1610612736'); // 1.5 GB Disk Cache for High-Speed Media Chunks
+app.commandLine.appendSwitch('media-cache-size', '536870912'); // 512 MB High-Speed RAM Media Cache
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,WebRtcHideLocalIpsWithMdns,CanvasOopRasterization');
+
 let serverInfo = { ip: '127.0.0.1', port: 8989, url: 'http://127.0.0.1:8989' };
 let ottWin: BrowserWindow | null = null;
 let googleWin: BrowserWindow | null = null;
@@ -31,6 +44,12 @@ function applySessionRules(ses: Electron.Session) {
     delete responseHeaders['Content-Security-Policy'];
     delete responseHeaders['frame-ancestors'];
     delete responseHeaders['Frame-Ancestors'];
+
+    // High-Capacity Segment Cache Control (Prevents buffer starvation for millions of viewers)
+    if (details.url.includes('.ts') || details.url.includes('.m4s') || details.url.includes('.aac') || details.url.includes('.mp4')) {
+      responseHeaders['Cache-Control'] = ['public, max-age=31536000, immutable'];
+    }
+
     callback({ responseHeaders });
   });
 

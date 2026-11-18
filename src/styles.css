@@ -2576,3 +2576,29 @@ button {
   z-index: 10 !important;
 }
 
+/* ==================== 10M+ HIGH CONCURRENCY ZERO-BUFFER BADGE ==================== */
+.zero-buffer-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  animation: zeroBufferGlow 3s infinite ease-in-out;
+  user-select: none;
+}
+
+@keyframes zeroBufferGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.45);
+  }
+}
+

@@ -1498,18 +1498,104 @@ export default function App() {
   }, [showOsd]);
 
   const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-        showOsd('⛶ Full Display: ON', 'Screen View');
-      }).catch(() => {});
+    const isCurrentlyFs = Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement);
+    if (!isCurrentlyFs) {
+      const docEl = document.documentElement as any;
+      const videoEl = (videoRef.current || ottVideoRef.current) as any;
+
+      const enterFs = docEl.requestFullscreen?.bind(docEl) || docEl.webkitRequestFullscreen?.bind(docEl);
+      if (enterFs) {
+        enterFs().then(() => {
+          setIsFullscreen(true);
+          showOsd('⛶ ফুলস্ক্রিন (অটো ল্যান্ডস্কেপ)', 'মোবাইল ও ট্যাবলেটে আড়াআড়ি ভিউ সক্রিয়');
+          // Auto lock to landscape on mobile & tablet
+          try {
+            if (typeof screen !== 'undefined' && screen.orientation && (screen.orientation as any).lock) {
+              (screen.orientation as any).lock('landscape').catch(() => {
+                (screen.orientation as any).lock?.('landscape-primary').catch(() => {});
+              });
+            }
+          } catch {}
+        }).catch(() => {
+          if (videoEl && videoEl.webkitEnterFullscreen) {
+            videoEl.webkitEnterFullscreen();
+          }
+        });
+      } else if (videoEl && videoEl.webkitEnterFullscreen) {
+        videoEl.webkitEnterFullscreen();
+      }
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullscreen(false);
-        showOsd('⛶ Full Display: OFF', 'Screen View');
-      }).catch(() => {});
+      const doc = document as any;
+      const exitFs = doc.exitFullscreen?.bind(doc) || doc.webkitExitFullscreen?.bind(doc);
+      if (exitFs) {
+        exitFs().then(() => {
+          setIsFullscreen(false);
+          showOsd('⛶ ফুলস্ক্রিন অফ', 'স্বাভাবিক ভিউ');
+          try {
+            if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.unlock) {
+              screen.orientation.unlock();
+            }
+          } catch {}
+        }).catch(() => {});
+      }
     }
   }, [showOsd]);
+
+  // Listen for native fullscreen change events (via mobile gestures, back button, or Esc)
+  useEffect(() => {
+    const handleFsChange = () => {
+      const isFs = Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      setIsFullscreen(isFs);
+      if (!isFs) {
+        try {
+          if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch {}
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+    };
+  }, []);
+
+  const closePlayer = useCallback(() => {
+    if (document.fullscreenElement) {
+      try {
+        document.exitFullscreen().catch(() => {});
+      } catch {}
+    }
+    try {
+      if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch {}
+    setIsFullscreen(false);
+    setActive(null);
+  }, []);
+
+  const closeOtt = useCallback(() => {
+    if (document.fullscreenElement) {
+      try {
+        document.exitFullscreen().catch(() => {});
+      } catch {}
+    }
+    try {
+      if (typeof screen !== 'undefined' && screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch {}
+    if (ottHlsRef.current) {
+      ottHlsRef.current.destroy();
+      ottHlsRef.current = null;
+    }
+    setIsFullscreen(false);
+    setActiveOtt(null);
+  }, []);
 
   const volumeUp = useCallback(() => {
     if (videoRef.current) {
@@ -1816,17 +1902,16 @@ export default function App() {
       return;
     }
     if (activeOtt) {
-      setActiveOtt(null);
+      closeOtt();
       return;
     }
     if (active) {
       if (showQuickDrawer) {
         setShowQuickDrawer(false);
-      } else if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
       } else {
-        setActive(null);
+        closePlayer();
       }
+      return;
     } else if (showAdd) {
       setShowAdd(false);
     } else if (showMobileConnect) {
@@ -1840,23 +1925,21 @@ export default function App() {
         setFocusedId(cardRow.railId);
       }
     }
-  }, [showGoogleModal, showPlayStoreHub, activeOtt, active, showQuickDrawer, showAdd, showMobileConnect, query, navRows, focusedId]);
+  }, [showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, showQuickDrawer, closePlayer, showAdd, showMobileConnect, query, navRows, focusedId]);
 
   const homeSpatial = useCallback(() => {
     if (showGoogleModal) setShowGoogleModal(false);
     if (showPlayStoreHub) setShowPlayStoreHub(false);
     if (activeOtt) {
-      if (ottHlsRef.current) {
-        ottHlsRef.current.destroy();
-        ottHlsRef.current = null;
-      }
-      setActiveOtt(null);
+      closeOtt();
+    }
+    if (active) {
+      closePlayer();
     }
     if (showQuickDrawer) setShowQuickDrawer(false);
     if (showAdd) setShowAdd(false);
     if (showMobileConnect) setShowMobileConnect(false);
     if (query) setQuery('');
-    if (active) setActive(null);
     setStoreCategory('all');
     setStoreSearch('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1867,7 +1950,7 @@ export default function App() {
     if (rowEl) rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showOsd('🏠 হোম স্ক্রিন', 'Sazib TV Home');
     setMessage('🏠 Sazib TV Home');
-  }, [showGoogleModal, showPlayStoreHub, activeOtt, showQuickDrawer, showAdd, showMobileConnect, query, active, showOsd]);
+  }, [showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, closePlayer, showQuickDrawer, showAdd, showMobileConnect, query, showOsd]);
 
   // Auto-scroll when focusedId changes
   useEffect(() => {
@@ -2729,7 +2812,7 @@ export default function App() {
         <div className={`tv-player-overlay ${isTheaterMode ? 'theater-mode' : ''}`} ref={playerOverlayRef}>
           {/* Top Player HUD */}
           <div className="tv-player-hud">
-            <button className="tv-round-btn" title="Back to Sazib TV (Esc)" onClick={() => setActive(null)}>
+            <button className="tv-round-btn" title="Back to Sazib TV (Esc)" onClick={closePlayer}>
               <ChevronLeft size={22} />
             </button>
 
@@ -2816,7 +2899,7 @@ export default function App() {
               >
                 {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
               </button>
-              <button className="tv-round-btn close" title="Exit Player (Esc)" onClick={() => setActive(null)}>
+              <button className="tv-round-btn close" title="Exit Player (Esc)" onClick={closePlayer}>
                 <X size={20} />
               </button>
             </div>
@@ -2941,7 +3024,7 @@ export default function App() {
               <button
                 className="tv-round-btn"
                 title="Back to Sazib TV (Esc)"
-                onClick={() => setActiveOtt(null)}
+                onClick={closeOtt}
               >
                 <ChevronLeft size={22} />
               </button>
@@ -3107,7 +3190,7 @@ export default function App() {
               <button
                 className="tv-round-btn close"
                 title="Exit (Esc)"
-                onClick={() => setActiveOtt(null)}
+                onClick={closeOtt}
               >
                 <X size={20} />
               </button>

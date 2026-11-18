@@ -1,0 +1,3500 @@
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import Hls from 'hls.js';
+import QRCode from 'qrcode';
+import {
+  Tv, Search, Settings, Heart, Play, Pause, Plus, Upload, Globe2, Radio,
+  Film, Trophy, Newspaper, X, ChevronLeft, ChevronRight, Volume2, VolumeX,
+  Maximize, Minimize, RefreshCw, ListVideo, Link2, MonitorPlay, Trash2,
+  Download, Sparkles, Music, Wifi, Clock, Star, Flame, Smartphone, QrCode,
+  Copy, Check, Cast, Compass, RadioTower, Grid, LogIn, Bell, SlidersHorizontal,
+  ExternalLink, Home
+} from 'lucide-react';
+import type { Channel, XtreamConfig } from './types';
+import defaultChannelsData from './defaultChannels.json';
+import sazibTvLogo from './assets/sazib-tv-logo.png';
+
+const DEFAULT_CHANNELS: Channel[] = defaultChannelsData as Channel[];
+
+// Authentic Google Play Store SVG Icon
+function PlayStoreIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 512 512" fill="none" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+      <path d="M48.7 13.1C44.3 17.6 41.7 24.3 41.7 33.1v445.8c0 8.8 2.6 15.5 7 20l242-242.9L48.7 13.1z" fill="#00D2FF" />
+      <path d="M372.4 329.8l-81.7-81.8L48.7 498.9c5.3 2.9 12.1 3.3 19.8-1.2l303.9-167.9z" fill="#FF3A44" />
+      <path d="M372.4 182.2L68.5 14.3C60.8 9.8 54 10.2 48.7 13.1l242 250.7 81.7-81.6z" fill="#00E676" />
+      <path d="M464.3 234.8l-91.9-52.6-81.7 81.7 81.7 81.7 92.1-52.7c15.8-9 24.5-22.1 24.5-39 0-16.9-8.7-30.1-24.7-39.1z" fill="#FFC800" />
+    </svg>
+  );
+}
+
+// Authentic Google 'G' 4-color SVG Icon
+function GoogleGIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+    </svg>
+  );
+}
+
+// Featured OTT & Android TV Apps
+export interface TVApp {
+  id: string;
+  name: string;
+  subtitle?: string;
+  logo: string;
+  bgColor?: string;
+  textColor?: string;
+  url?: string;
+  webUrl?: string;
+  type?: 'channel' | 'ott' | 'tool';
+  developer?: string;
+  category?: 'ott' | 'live' | 'music' | 'tools';
+  categoryLabel?: string;
+  rating?: number;
+  downloads?: string;
+  size?: string;
+  description?: string;
+  row?: 'apps' | 'widgets';
+}
+
+export interface StoreCatalogApp extends TVApp {
+  developer: string;
+  category: 'ott' | 'live' | 'music' | 'tools';
+  categoryLabel: string;
+  rating: number;
+  downloads: string;
+  size: string;
+  description: string;
+  row: 'apps' | 'widgets';
+}
+
+const PLAY_STORE_APP: TVApp = {
+  id: 'app-playstore',
+  name: 'Google Play Store',
+  subtitle: 'Official App Store',
+  logo: '',
+  bgColor: '#ffffff',
+  textColor: '#01875f',
+  url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+  webUrl: 'https://play.google.com/store/apps',
+  type: 'ott'
+};
+
+const ALL_STORE_APPS: StoreCatalogApp[] = [
+  {
+    id: 'app-chorki',
+    name: 'Chorki',
+    subtitle: 'Film, Fun, Foorti',
+    developer: 'Chorki Official',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.8,
+    downloads: '10M+',
+    size: '22 MB',
+    logo: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=200&auto=format&fit=crop&q=60',
+    bgColor: '#ffffff',
+    textColor: '#e81c5a',
+    url: 'https://vods2.aynaott.com/gseriesDrama/tracks-v1a1/mono.ts.m3u8',
+    webUrl: 'https://www.chorki.com',
+    description: 'জনপ্রিয় বাংলা সিনেমা, ওয়েব সিরিজ ও অরিজিনাল নাটক দেখার সেরা প্ল্যাটফর্ম।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-toffee',
+    name: 'Toffee',
+    subtitle: 'Live Sports & Dramas',
+    developer: 'Banglalink Digital',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.7,
+    downloads: '50M+',
+    size: '28 MB',
+    logo: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=200&auto=format&fit=crop&q=60',
+    bgColor: '#1d132b',
+    textColor: '#f43f5e',
+    url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
+    webUrl: 'https://toffeebd.com',
+    description: 'সরাসরি লাইভ ক্রিকেট, ফুটবল এবং শত শত টিভি চ্যানেল ও নাটক ফ্রিতে উপভোগ করুন।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-netflix',
+    name: 'Netflix',
+    subtitle: 'Movies & TV Series',
+    developer: 'Netflix, Inc.',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.9,
+    downloads: '1B+',
+    size: '36 MB',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
+    bgColor: '#ffffff',
+    textColor: '#e50914',
+    url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+    webUrl: 'https://www.netflix.com',
+    description: 'বিশ্ববিখ্যাত ব্লকবাস্টার সিনেমা, সিরিজ ও ডকুমেন্টারির বিশ্বসেরা ওটিটি।',
+    row: 'apps'
+  },
+  {
+    id: 'app-youtube',
+    name: 'YouTube',
+    subtitle: 'Live Videos & Music',
+    developer: 'Google LLC',
+    category: 'ott',
+    categoryLabel: 'ভিডিও ও মিউজিক',
+    rating: 4.9,
+    downloads: '5B+',
+    size: '42 MB',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg',
+    bgColor: '#ffffff',
+    textColor: '#ff0000',
+    url: 'https://tv-trtworld.medya.trt.com.tr/master.m3u8',
+    webUrl: 'https://www.youtube.com',
+    description: 'অফিসিয়াল ইউটিউব টিভি অ্যাপ - হাই ডেফিনিশন ভিডিও, লাইভ নিউজ ও গান।',
+    row: 'apps'
+  },
+  {
+    id: 'app-prime',
+    name: 'Prime Video',
+    subtitle: 'Amazon Originals & Movies',
+    developer: 'Amazon Mobile LLC',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.6,
+    downloads: '500M+',
+    size: '34 MB',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg',
+    bgColor: '#00050d',
+    textColor: '#00a8e1',
+    url: 'https://amg00877-b4unew-amg00877c2-xiaomi-in-5489.playouts.now.amagi.tv/playlist.m3u8',
+    webUrl: 'https://www.primevideo.com',
+    description: 'অ্যামাজন অরিজিনালস, হিন্দি ও হলিউড সিনেমার প্রিমিয়াম কালেকশন।',
+    row: 'apps'
+  },
+  {
+    id: 'app-disney',
+    name: 'Disney+ Hotstar',
+    subtitle: 'Blockbuster Cinema & Cricket',
+    developer: 'Novi Digital',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.7,
+    downloads: '500M+',
+    size: '30 MB',
+    logo: '',
+    bgColor: '#040d29',
+    textColor: '#1055ea',
+    url: 'https://samitaorigin.tangotv.in/ALLTIMEMOVIES/SAMITAORIGIN/index.m3u8',
+    webUrl: 'https://www.hotstar.com',
+    description: 'ডিজনি প্লাস, মার্ভেল, স্টার প্লাস সিরিয়াল এবং সরাসরি লাইভ ক্রিকেট।',
+    row: 'apps'
+  },
+  {
+    id: 'app-hoichoi',
+    name: 'Hoichoi',
+    subtitle: 'Best of Bangla Movies',
+    developer: 'Hoichoi Technologies',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.6,
+    downloads: '10M+',
+    size: '25 MB',
+    logo: '',
+    bgColor: '#e31b23',
+    textColor: '#ffffff',
+    url: 'https://box.bbaria.net:8083/Jalsha_Movie/tracks-v1a1/mono.m3u8',
+    webUrl: 'https://www.hoichoi.tv',
+    description: 'সর্ববৃহৎ বাংলা বিনোদন প্ল্যাটফর্ম - ১০০+ এক্সক্লুসিভ সিরিজ ও সিনেমা।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-zee5',
+    name: 'Zee5',
+    subtitle: 'Colors Bangla & Serials',
+    developer: 'Zee Entertainment',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.5,
+    downloads: '100M+',
+    size: '31 MB',
+    logo: '',
+    bgColor: '#170c2d',
+    textColor: '#f58220',
+    url: 'https://tvsen6.aynaott.com/ZeeBangla/index.m3u8',
+    webUrl: 'https://www.zee5.com',
+    description: 'জি বাংলা, জি সিনেমা ও জনপ্রিয় বাংলা সিরিয়াল লাইভ ও অন-ডিমান্ড।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-bongo',
+    name: 'Bongo BD',
+    subtitle: 'All Entertainment',
+    developer: 'Stellar Digital Ltd',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.4,
+    downloads: '10M+',
+    size: '18 MB',
+    logo: '',
+    bgColor: '#d4145a',
+    textColor: '#ffffff',
+    url: 'http://alvetv.com/moviebanglatv/8080/index.m3u8',
+    webUrl: 'https://bongobd.com',
+    description: 'বাংলা নাটক, তামিল ডাব্বড মুভি এবং আকর্ষণীয় ওয়েব সিরিজ।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-sonyliv',
+    name: 'Sony LIV',
+    subtitle: 'Live Sports & Premium TV',
+    developer: 'Culver Max Entertainment',
+    category: 'ott',
+    categoryLabel: 'লাইভ ও স্পোর্টস',
+    rating: 4.5,
+    downloads: '100M+',
+    size: '29 MB',
+    logo: '',
+    bgColor: '#0c0f1d',
+    textColor: '#00e5ff',
+    url: 'https://starsportshindiii.pages.dev/index.m3u8',
+    webUrl: 'https://www.sonyliv.com',
+    description: 'সনি টিভি, উয়েফা চ্যাম্পিয়ন্স লিগ ফুটবল ও লাইভ স্পোর্টস।',
+    row: 'apps'
+  },
+  {
+    id: 'app-tsports',
+    name: 'T Sports',
+    subtitle: 'Live Sports & Cricket',
+    developer: 'Bashundhara Group',
+    category: 'live',
+    categoryLabel: 'লাইভ টিভি ও স্পোর্টস',
+    rating: 4.8,
+    downloads: '10M+',
+    size: '16 MB',
+    logo: '',
+    bgColor: '#b91c1c',
+    textColor: '#ffffff',
+    url: 'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/bd.m3u8',
+    webUrl: 'https://tsports.com',
+    description: 'বাংলাদেশের প্রথম ও একমাত্র স্পোর্টস চ্যানেল - BPL ও আন্তর্জাতিক খেলা।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-spotify',
+    name: 'Spotify TV',
+    subtitle: 'Bangla & Global Music',
+    developer: 'Spotify AB',
+    category: 'music',
+    categoryLabel: 'মিউজিক ও গান',
+    rating: 4.8,
+    downloads: '1B+',
+    size: '27 MB',
+    logo: '',
+    bgColor: '#121212',
+    textColor: '#1db954',
+    url: 'https://mumt05.tangotv.in/87NeALx2SANGEETBANGLA/index.m3u8',
+    webUrl: 'https://open.spotify.com',
+    description: 'কোটি কোটি গান, পডকাস্ট ও বাংলা অ্যালবাম ব্যাকগ্রাউন্ডে শুনুন।',
+    row: 'apps'
+  },
+  {
+    id: 'app-ytmusic',
+    name: 'YouTube Music',
+    subtitle: 'Official Music & Playlists',
+    developer: 'Google LLC',
+    category: 'music',
+    categoryLabel: 'মিউজিক ও গান',
+    rating: 4.7,
+    downloads: '1B+',
+    size: '26 MB',
+    logo: '',
+    bgColor: '#000000',
+    textColor: '#ff0000',
+    webUrl: 'https://music.youtube.com',
+    description: 'ইউটিউব এর অফিসিয়াল মিউজিক স্ট্রিমিং অ্যাপ।',
+    row: 'apps'
+  },
+  {
+    id: 'app-jiocinema',
+    name: 'JioCinema',
+    subtitle: 'Movies, Cricket & HBO',
+    developer: 'Viacom18 Media',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.6,
+    downloads: '500M+',
+    size: '35 MB',
+    logo: '',
+    bgColor: '#1a0933',
+    textColor: '#d946ef',
+    webUrl: 'https://www.jiocinema.com',
+    description: 'আইপিএল লাইভ, ভারতীয় সিনেমা এবং এইচবিও অরিজিনালস।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-bioscope',
+    name: 'Bioscope',
+    subtitle: 'GP Live TV & Series',
+    developer: 'Grameenphone',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.5,
+    downloads: '10M+',
+    size: '19 MB',
+    logo: '',
+    bgColor: '#005b94',
+    textColor: '#ffffff',
+    url: 'https://byphdgllyk.gpcdn.net/hls/deeptotv/index.m3u8',
+    webUrl: 'https://www.bioscopelive.com',
+    description: 'গ্রামীণফোনের অফিসিয়াল ওটিটি - লাইভ টিভি ও এক্সক্লুসিভ নাটক।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-iscreen',
+    name: 'iScreen',
+    subtitle: 'Channel I OTT Hub',
+    developer: 'Impress Telefilm Ltd',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.3,
+    downloads: '5M+',
+    size: '15 MB',
+    logo: '',
+    bgColor: '#0f381e',
+    textColor: '#22c55e',
+    url: 'https://tvsen6.aynaott.com/FNHpYvGZ7FkCE10PwTHm/index.m3u8',
+    webUrl: 'https://iscreen.com.bd',
+    description: 'চ্যানেল আই এর সমস্ত অনুষ্ঠান, নাটক ও সিনেমা।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-vlc',
+    name: 'VLC for Android',
+    subtitle: 'Powerful 4K/HDR Player',
+    developer: 'VideoLAN',
+    category: 'tools',
+    categoryLabel: 'টুলস ও প্লেয়ার',
+    rating: 4.9,
+    downloads: '100M+',
+    size: '38 MB',
+    logo: '',
+    bgColor: '#ff8800',
+    textColor: '#ffffff',
+    webUrl: 'https://www.videolan.org/vlc/',
+    description: 'সব ধরণের ভিডিও ও অডিও ফরম্যাট এবং নেটওয়ার্ক স্ট্রিম চালানোর সেরা প্লেয়ার।',
+    row: 'apps'
+  },
+  {
+    id: 'app-mxplayer',
+    name: 'MX Player TV',
+    subtitle: 'Web Series & HD Video',
+    developer: 'MX Media',
+    category: 'tools',
+    categoryLabel: 'টুলস ও প্লেয়ার',
+    rating: 4.6,
+    downloads: '500M+',
+    size: '32 MB',
+    logo: '',
+    bgColor: '#0284c7',
+    textColor: '#ffffff',
+    webUrl: 'https://www.mxplayer.in',
+    description: 'অনলাইন ওয়েব সিরিজ, সিনেমা এবং হাই কোয়ালিটি টিভি প্লেয়ার।',
+    row: 'apps'
+  },
+  {
+    id: 'app-kodi',
+    name: 'KODI Media Center',
+    subtitle: 'Home Theater Media Hub',
+    developer: 'XBMC Foundation',
+    category: 'tools',
+    categoryLabel: 'টুলস ও প্লেয়ার',
+    rating: 4.7,
+    downloads: '50M+',
+    size: '65 MB',
+    logo: '',
+    bgColor: '#1793d1',
+    textColor: '#ffffff',
+    webUrl: 'https://kodi.tv',
+    description: 'সম্পূর্ণ ওপেন-সোর্স হোম থিয়েটার সফটওয়্যার।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-tvweb',
+    name: 'TVWeb Browser',
+    subtitle: 'High Speed TV Browser',
+    developer: 'TVWeb Team',
+    category: 'tools',
+    categoryLabel: 'টুলস ও প্লেয়ার',
+    rating: 4.5,
+    downloads: '10M+',
+    size: '12 MB',
+    logo: '',
+    bgColor: '#ffffff',
+    textColor: '#0284c7',
+    url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8',
+    webUrl: 'https://www.google.com',
+    description: 'টিভির জন্য স্পেশালি অপ্টিমাইজড ব্রাউজার।',
+    row: 'widgets'
+  },
+  {
+    id: 'app-crunchyroll',
+    name: 'Crunchyroll',
+    subtitle: 'Anime & Manga Series',
+    developer: 'Crunchyroll, LLC',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.7,
+    downloads: '100M+',
+    size: '33 MB',
+    logo: '',
+    bgColor: '#23252b',
+    textColor: '#f47521',
+    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    webUrl: 'https://www.crunchyroll.com',
+    description: 'বিশ্বের বৃহত্তম এনিমে লাইব্রেরি - ডাব্বড ও সাবটাইটেলসহ।',
+    row: 'apps'
+  },
+  {
+    id: 'app-appletv',
+    name: 'Apple TV+',
+    subtitle: 'Apple Originals & Cinema',
+    developer: 'Apple Inc.',
+    category: 'ott',
+    categoryLabel: 'ওটিটি ও সিনেমা',
+    rating: 4.6,
+    downloads: '50M+',
+    size: '28 MB',
+    logo: '',
+    bgColor: '#000000',
+    textColor: '#ffffff',
+    url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8',
+    webUrl: 'https://tv.apple.com',
+    description: 'পুরস্কারপ্রাপ্ত অ্যাপল অরিজিনাল সিরিজ ও চলচ্চিত্র।',
+    row: 'apps'
+  },
+  {
+    id: 'app-fastcast',
+    name: 'FastCast',
+    subtitle: 'Mobile Cast & Remote',
+    developer: 'Sazib TV',
+    category: 'tools',
+    categoryLabel: 'টুলস ও প্লেয়ার',
+    rating: 5.0,
+    downloads: '1M+',
+    size: '8 MB',
+    logo: '',
+    bgColor: '#00a8e8',
+    textColor: '#ffffff',
+    type: 'tool',
+    webUrl: '',
+    description: 'স্মার্টফোনকে রিমোট ও এয়ার মাউস হিসেবে কানেক্ট করার টুল।',
+    row: 'apps'
+  },
+  {
+    id: 'app-player',
+    name: 'Sazib Player',
+    subtitle: '4K Ultra HD Player',
+    developer: 'Sazib TV',
+    category: 'tools',
+    categoryLabel: 'টুলস ও প্লেয়ার',
+    rating: 5.0,
+    downloads: '1M+',
+    size: '10 MB',
+    logo: '',
+    bgColor: '#0072ce',
+    textColor: '#ffffff',
+    url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+    type: 'ott',
+    webUrl: '',
+    description: 'বিল্ট-ইন ৪কে আল্ট্রা এইচডি প্লেয়ার এবং অডিও ইকুইলাইজার।',
+    row: 'apps'
+  }
+];
+
+function classifyCategory(c: Channel): string {
+  const s = (c.group + ' ' + c.name).toLowerCase();
+  if (c.group === 'Indian TV' || /colors|jalsha|zee 24|aakaash|sangeet bangla|ruposhi|goldmines|b4u|9x|star sports|dd sports|&tv|asianet|cineplex|bolly|dd bangla|amar bangla/i.test(s)) {
+    return 'india';
+  }
+  if (/bangla|bd|bangladesh|dhaka|chittagong|somoy|jamuna|ekattor|dbc|independent|ntv|rtv|deepto|gtv|btv|maasranga|nagorik|atn|channel s|bijoy|ananda|desh|duronto|global tv|asian tv|mohana|my tv|nexus|channel 9|green tv|sa tv/.test(s)) return 'bd';
+  if (/sport|cricket|football|tennis|espn|fifa|racing|red bull|combat|fight/.test(s)) return 'sports';
+  if (/movie|cinema|film|hbo|cinemax|blockbuster|animation|bunny|mux/.test(s)) return 'movies';
+  if (/news|bbc|cnn|al.?jazeera|sky news|reuters|euronews|cna|wion|trt|nhk|france 24|dw|24/.test(s)) return 'news';
+  if (/music|song|mtv|vh1|radio|clubbing|trace/.test(s)) return 'music';
+  return 'general';
+}
+
+const CHANNELS_VERSION = 'sazib-tv-v5';
+
+export default function App() {
+  const [channels, setChannels] = useState<Channel[]>(() => {
+    try {
+      const storedVersion = localStorage.getItem('sb-channels-version');
+      const stored = localStorage.getItem('sb-channels');
+      if (stored && storedVersion === CHANNELS_VERSION) {
+        const parsed = JSON.parse(stored);
+        if (
+          Array.isArray(parsed) &&
+          parsed.length >= 20 &&
+          parsed.some((c: Channel) => c.name.toLowerCase().includes('somoy'))
+        ) {
+          return parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    try {
+      localStorage.setItem('sb-channels-version', CHANNELS_VERSION);
+      localStorage.setItem('sb-channels', JSON.stringify(DEFAULT_CHANNELS));
+    } catch {}
+    return DEFAULT_CHANNELS;
+  });
+
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('sb-favs') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const [active, setActive] = useState<Channel | null>(null);
+  const [query, setQuery] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [showMobileConnect, setShowMobileConnect] = useState(false);
+  const [playlistUrl, setPlaylistUrl] = useState('');
+  const [xtream, setXtream] = useState<XtreamConfig>({ host: '', username: '', password: '' });
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  // Mobile Remote Connection info (Initialized immediately with LAN IP from URL params or default)
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialMobileUrl = queryParams.get('mobileUrl') || 'http://192.168.0.4:8989';
+  const initialMobileIp = queryParams.get('mobileIp') || '192.168.0.4';
+
+  const [mobileInfo, setMobileInfo] = useState<{ ip: string; port: number; url: string }>({
+    ip: initialMobileIp,
+    port: 8989,
+    url: initialMobileUrl
+  });
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+
+  const generateQR = useCallback(async (targetUrl: string) => {
+    try {
+      const qr = await QRCode.toDataURL(targetUrl, {
+        width: 340,
+        margin: 2,
+        color: { dark: '#060b18', light: '#ffffff' },
+        errorCorrectionLevel: 'M'
+      });
+      setQrCodeDataUrl(qr);
+    } catch {
+      setQrCodeDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(targetUrl)}`);
+    }
+  }, []);
+
+  // Player state
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [streamError, setStreamError] = useState(false);
+  const [isLoadingStream, setIsLoadingStream] = useState(false);
+  const [playerOsd, setPlayerOsd] = useState<{ title: string; sub?: string; logo?: string } | null>(null);
+  const [showQuickDrawer, setShowQuickDrawer] = useState(false);
+  const [drawerQuery, setDrawerQuery] = useState('');
+  const osdTimerRef = useRef<any>(null);
+
+  const showOsd = useCallback((title: string, sub?: string, logo?: string) => {
+    setPlayerOsd({ title, sub, logo });
+    if (osdTimerRef.current) clearTimeout(osdTimerRef.current);
+    osdTimerRef.current = setTimeout(() => setPlayerOsd(null), 3000);
+  }, []);
+
+  // Virtual Air Mouse Cursor (controlled via Smartphone Remote)
+  const [virtualCursor, setVirtualCursor] = useState<{ x: number; y: number; visible: boolean; isClicking: boolean }>({
+    x: typeof window !== 'undefined' ? window.innerWidth / 2 : 600,
+    y: typeof window !== 'undefined' ? window.innerHeight / 2 : 400,
+    visible: false,
+    isClicking: false
+  });
+  const cursorHideTimerRef = useRef<any>(null);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const playerOverlayRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus item for Leanback Keyboard / Remote Navigation
+  const [focusedId, setFocusedId] = useState<string>('app-playstore');
+
+  // Google Account & Authentication State
+  const [googleUser, setGoogleUser] = useState<{ name: string; email: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_tv_google_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleInputEmail, setGoogleInputEmail] = useState('');
+  const [googleInputName, setGoogleInputName] = useState('');
+
+  // Google Play Store Hub State & Direct App Installation Engine
+  const [showPlayStoreHub, setShowPlayStoreHub] = useState(false);
+  const [storeCategory, setStoreCategory] = useState<string>('all');
+  const [storeSearch, setStoreSearch] = useState<string>('');
+  const [installingAppId, setInstallingAppId] = useState<string | null>(null);
+  const [installProgress, setInstallProgress] = useState<number>(0);
+
+  const [installedAppIds, setInstalledAppIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_tv_installed_apps');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [
+      'app-netflix', 'app-youtube', 'app-prime', 'app-spotify',
+      'app-fastcast', 'app-player', 'app-chorki', 'app-toffee',
+      'app-hoichoi', 'app-zee5', 'app-bongo'
+    ];
+  });
+
+  const [customApps, setCustomApps] = useState<StoreCatalogApp[]>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_tv_custom_apps');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Custom App Form inputs
+  const [customAppName, setCustomAppName] = useState('');
+  const [customAppUrl, setCustomAppUrl] = useState('');
+  const [customAppCategory, setCustomAppCategory] = useState<'ott' | 'live' | 'music' | 'tools'>('ott');
+  const [customAppRow, setCustomAppRow] = useState<'apps' | 'widgets'>('apps');
+
+  // All store apps + custom installed apps
+  const allStoreAndCustom = useMemo(() => [...ALL_STORE_APPS, ...customApps], [customApps]);
+
+  const featuredAppsRow1 = useMemo(() => {
+    return [PLAY_STORE_APP, ...allStoreAndCustom.filter(a => a.row === 'apps' && installedAppIds.includes(a.id))];
+  }, [allStoreAndCustom, installedAppIds]);
+
+  const featuredAppsRow2 = useMemo(() => {
+    return allStoreAndCustom.filter(a => a.row === 'widgets' && installedAppIds.includes(a.id));
+  }, [allStoreAndCustom, installedAppIds]);
+
+  // Actions for Store Installation
+  const installStoreApp = useCallback((app: StoreCatalogApp) => {
+    setInstallingAppId(app.id);
+    setInstallProgress(25);
+    setTimeout(() => {
+      setInstallProgress(65);
+      setTimeout(() => {
+        setInstallProgress(100);
+        setInstalledAppIds(prev => {
+          const next = prev.includes(app.id) ? prev : [...prev, app.id];
+          localStorage.setItem('sazib_tv_installed_apps', JSON.stringify(next));
+          return next;
+        });
+        setInstallingAppId(null);
+        setInstallProgress(0);
+        showOsd('✓ ' + app.name + ' ইনস্টল হয়েছে', 'টিভি হোমস্ক্রিনে যুক্ত করা হয়েছে', app.logo);
+      }, 500);
+    }, 400);
+  }, [showOsd]);
+
+  const uninstallStoreApp = useCallback((appId: string, appName: string) => {
+    setInstalledAppIds(prev => {
+      const next = prev.filter(id => id !== appId);
+      localStorage.setItem('sazib_tv_installed_apps', JSON.stringify(next));
+      return next;
+    });
+    showOsd('🗑️ ' + appName + ' আনইনস্টল হয়েছে', 'টিভি হোমস্ক্রিন থেকে সরানো হয়েছে');
+  }, [showOsd]);
+
+  const handleInstallCustomApp = useCallback(() => {
+    if (!customAppName.trim() || !customAppUrl.trim()) return;
+    const newId = 'custom-' + Date.now();
+    const newApp: StoreCatalogApp = {
+      id: newId,
+      name: customAppName.trim(),
+      subtitle: 'Custom Installed App',
+      developer: 'User Installed',
+      category: customAppCategory,
+      categoryLabel: customAppCategory === 'ott' ? 'ওটিটি' : customAppCategory === 'music' ? 'মিউজিক' : 'টুলস',
+      rating: 5.0,
+      downloads: 'Custom',
+      size: '15 MB',
+      logo: '',
+      bgColor: '#162447',
+      textColor: '#ffffff',
+      webUrl: customAppUrl.trim().startsWith('http') ? customAppUrl.trim() : 'https://' + customAppUrl.trim(),
+      description: 'ব্যবহারকারী কর্তৃক ইনস্টলকৃত কাস্টম ওয়েব অ্যাপ।',
+      row: customAppRow
+    };
+    setCustomApps(prev => {
+      const next = [...prev, newApp];
+      localStorage.setItem('sazib_tv_custom_apps', JSON.stringify(next));
+      return next;
+    });
+    setInstalledAppIds(prev => {
+      const next = [...prev, newId];
+      localStorage.setItem('sazib_tv_installed_apps', JSON.stringify(next));
+      return next;
+    });
+    setCustomAppName('');
+    setCustomAppUrl('');
+    setStoreCategory('installed');
+    showOsd('✓ ' + newApp.name + ' ইনস্টল হয়েছে', 'টিভি হোমস্ক্রিনে যুক্ত করা হয়েছে');
+  }, [customAppName, customAppUrl, customAppCategory, customAppRow, showOsd]);
+
+  const handleGoogleLogout = useCallback(() => {
+    setGoogleUser(null);
+    localStorage.removeItem('sazib_tv_google_user');
+    showOsd('গুগল অ্যাকাউন্ট সাইন আউট', 'প্লে স্টোর থেকে সাইন আউট সম্পন্ন');
+    setShowGoogleModal(false);
+  }, [showOsd]);
+
+  const handleSaveGoogleUser = useCallback(() => {
+    const email = googleInputEmail.trim() || 'user@gmail.com';
+    const name = googleInputName.trim() || email.split('@')[0];
+    const user = { name, email };
+    setGoogleUser(user);
+    localStorage.setItem('sazib_tv_google_user', JSON.stringify(user));
+    setShowGoogleModal(false);
+    showOsd('✓ গুগল প্লে কানেক্টেড', email);
+  }, [googleInputEmail, googleInputName, showOsd]);
+
+  const filteredStoreApps = useMemo(() => {
+    let list = allStoreAndCustom;
+    if (storeCategory === 'installed') {
+      list = list.filter(a => installedAppIds.includes(a.id));
+    } else if (storeCategory !== 'all' && storeCategory !== 'custom' && storeCategory !== 'web') {
+      list = list.filter(a => a.category === storeCategory);
+    }
+    if (storeSearch.trim()) {
+      const q = storeSearch.toLowerCase();
+      list = list.filter(a =>
+        a.name.toLowerCase().includes(q) ||
+        a.developer.toLowerCase().includes(q) ||
+        a.description.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allStoreAndCustom, storeCategory, storeSearch, installedAppIds]);
+
+  // In-App OTT Experience Platform state (YouTube, Netflix, Chorki, Toffee, Play Store, etc.)
+  const [activeOtt, setActiveOtt] = useState<TVApp | null>(null);
+  const [ottMode, setOttMode] = useState<'web' | 'stream'>('web');
+  const [isOttIframeLoading, setIsOttIframeLoading] = useState(true);
+  const ottVideoRef = useRef<HTMLVideoElement>(null);
+  const ottHlsRef = useRef<Hls | null>(null);
+
+  const openOttApp = useCallback((app: TVApp, preferredMode: 'web' | 'stream' = 'web') => {
+    if (app.id === 'app-playstore') {
+      setShowPlayStoreHub(true);
+      return;
+    }
+    if (app.id === 'app-fastcast') {
+      setShowMobileConnect(true);
+      return;
+    }
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setActive(null);
+    setActiveOtt(app);
+    setOttMode(preferredMode);
+    setIsOttIframeLoading(true);
+    setTimeout(() => {
+      setIsOttIframeLoading(false);
+    }, 2200);
+    showOsd(app.name, app.subtitle || 'OTT Platform', app.logo);
+  }, [showOsd]);
+
+  // Auto-dismiss OTT loading pill on webview events or timer
+  useEffect(() => {
+    if (!activeOtt) return;
+    setIsOttIframeLoading(true);
+
+    const timer = setTimeout(() => {
+      setIsOttIframeLoading(false);
+    }, 2200);
+
+    const interval = setInterval(() => {
+      const wv = document.getElementById('ott-browser-webview') as any;
+      if (wv) {
+        clearInterval(interval);
+        const hide = () => setIsOttIframeLoading(false);
+        wv.addEventListener('dom-ready', hide);
+        wv.addEventListener('did-finish-load', hide);
+        wv.addEventListener('did-stop-loading', hide);
+        wv.addEventListener('did-fail-load', hide);
+      }
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [activeOtt, ottMode]);
+
+  // HLS Video Stream Engine for In-App OTT stream mode
+  useEffect(() => {
+    if (!activeOtt || ottMode !== 'stream' || !activeOtt.url) {
+      if (ottHlsRef.current) {
+        ottHlsRef.current.destroy();
+        ottHlsRef.current = null;
+      }
+      if (ottVideoRef.current) {
+        ottVideoRef.current.pause();
+        ottVideoRef.current.removeAttribute('src');
+      }
+      return;
+    }
+
+    const video = ottVideoRef.current;
+    if (!video) return;
+
+    if (Hls.isSupported() && activeOtt.url.includes('.m3u8')) {
+      if (ottHlsRef.current) ottHlsRef.current.destroy();
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        manifestLoadingTimeOut: 15000,
+        levelLoadingTimeOut: 15000
+      });
+      ottHlsRef.current = hls;
+      hls.loadSource(activeOtt.url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+      });
+      hls.on(Hls.Events.ERROR, (_evt, data) => {
+        if (data.fatal) {
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            hls.startLoad();
+          } else {
+            hls.destroy();
+          }
+        }
+      });
+    } else {
+      video.src = activeOtt.url;
+      video.play().catch(() => {});
+    }
+
+    return () => {
+      if (ottHlsRef.current) {
+        ottHlsRef.current.destroy();
+        ottHlsRef.current = null;
+      }
+    };
+  }, [activeOtt, ottMode]);
+
+  // Digital clock
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+    };
+    updateClock();
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch local IP & generate QR Code for Mobile Remote (Immediate + Auto-poll)
+  useEffect(() => {
+    generateQR(mobileInfo.url);
+
+    let isSubscribed = true;
+    const fetchMobileInfo = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8989/api/info');
+        if (res.ok) {
+          const info = await res.json();
+          if (info && info.url && isSubscribed) {
+            setMobileInfo(info);
+            generateQR(info.url);
+          }
+        }
+      } catch (err) {
+        console.log('Mobile server standby:', err);
+      }
+    };
+
+    fetchMobileInfo();
+    const interval = setInterval(() => {
+      if (isSubscribed) fetchMobileInfo();
+    }, 3000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [generateQR, mobileInfo.url]);
+
+  // Re-generate QR whenever mobile connect modal opens
+  useEffect(() => {
+    if (showMobileConnect) {
+      generateQR(mobileInfo.url);
+      fetch('http://127.0.0.1:8989/api/info')
+        .then(r => r.json())
+        .then(info => {
+          if (info && info.url) {
+            setMobileInfo(info);
+            generateQR(info.url);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [showMobileConnect, mobileInfo.url, generateQR]);
+
+  // Sync channels & OTT apps to Mobile Remote server whenever channels change
+  useEffect(() => {
+    try {
+      localStorage.setItem('sb-channels', JSON.stringify(channels));
+      const allSearchable = [
+        ...channels,
+        ...featuredAppsRow1.filter(a => a.url).map(a => ({
+          id: a.id,
+          name: a.name,
+          group: 'Apps',
+          url: a.url!,
+          logo: a.logo,
+          webUrl: a.webUrl
+        })),
+        ...featuredAppsRow2.filter(a => a.url).map(a => ({
+          id: a.id,
+          name: a.name,
+          group: 'Widgets',
+          url: a.url!,
+          logo: a.logo,
+          webUrl: a.webUrl
+        }))
+      ];
+      fetch('http://127.0.0.1:8989/api/channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(allSearchable)
+      }).catch(() => {});
+    } catch (e) {
+      console.error(e);
+    }
+  }, [channels]);
+
+  // STREAM PLAYBACK ENGINE (HLS.js + HTML5 Video)
+  useEffect(() => {
+    if (!active) {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      }
+      setStreamError(false);
+      setIsLoadingStream(false);
+      return;
+    }
+
+    let isCancelled = false;
+    let hlsInstance: Hls | null = null;
+
+    const initStream = () => {
+      const video = videoRef.current;
+      if (!video) {
+        if (!isCancelled) {
+          requestAnimationFrame(initStream);
+        }
+        return;
+      }
+
+      setStreamError(false);
+      setIsLoadingStream(true);
+      setIsPlaying(true);
+
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+
+      const streamUrl = active.url ? active.url.trim() : '';
+      if (!streamUrl) {
+        setStreamError(true);
+        setIsLoadingStream(false);
+        return;
+      }
+
+      const attemptPlay = () => {
+        if (isCancelled) return;
+        video.play().then(() => {
+          setIsPlaying(true);
+          setIsLoadingStream(false);
+          setStreamError(false);
+        }).catch((err) => {
+          console.warn('Playback play() was interrupted or prevented:', err);
+        });
+      };
+
+      const isHls = streamUrl.includes('.m3u8') ||
+                    streamUrl.includes('aynaott') ||
+                    streamUrl.includes('aynascope') ||
+                    streamUrl.includes('gpcdn') ||
+                    streamUrl.includes('sunplex') ||
+                    streamUrl.includes('shamon-cable') ||
+                    streamUrl.includes('akamaized') ||
+                    streamUrl.includes('tplay');
+
+      if (isHls && Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 60,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          manifestLoadingTimeOut: 15000,
+          manifestLoadingMaxRetry: 5,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingTimeOut: 15000,
+          fragLoadingTimeOut: 20000,
+          xhrSetup: (xhr) => {
+            xhr.withCredentials = false;
+          }
+        });
+
+        hlsInstance = hls;
+        hlsRef.current = hls;
+
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (!isCancelled) {
+            setIsLoadingStream(false);
+            attemptPlay();
+          }
+        });
+
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('HLS network error, attempting auto retry...');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('HLS media error, attempting auto recover...');
+                hls.recoverMediaError();
+                break;
+              default:
+                console.error('HLS unrecoverable error:', data);
+                hls.destroy();
+                hlsRef.current = null;
+                if (!isCancelled) {
+                  setIsLoadingStream(false);
+                  setStreamError(true);
+                }
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+        video.addEventListener('loadedmetadata', attemptPlay, { once: true });
+      } else {
+        video.src = streamUrl;
+        attemptPlay();
+      }
+    };
+
+    initStream();
+
+    return () => {
+      isCancelled = true;
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+      if (hlsInstance) {
+        hlsInstance.destroy();
+      }
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      }
+    };
+  }, [active]);
+
+  // Sync player & OTT state to Mobile Remote server
+  useEffect(() => {
+    try {
+      fetch('http://127.0.0.1:8989/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          activeChannel: active || (activeOtt ? { id: activeOtt.id, name: activeOtt.name, group: 'OTT', logo: activeOtt.logo } : null),
+          isPlaying,
+          isFullscreen
+        })
+      }).catch(() => {});
+    } catch {}
+  }, [active, activeOtt, isPlaying, isFullscreen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sb-favs', JSON.stringify(favorites));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [favorites]);
+
+  // REAL-TIME MOBILE REMOTE LISTENER (SSE from mobile server)
+  useEffect(() => {
+    let es: EventSource | null = null;
+    let reconnectTimeout: any = null;
+
+    const connectSSE = () => {
+      try {
+        es = new EventSource('http://127.0.0.1:8989/api/events');
+        es.addEventListener('command', (event: MessageEvent) => {
+          try {
+            const data = JSON.parse(event.data);
+            handleRemoteCommand(data);
+          } catch (e) {
+            console.error('Failed to parse mobile command:', e);
+          }
+        });
+
+        es.onerror = () => {
+          es?.close();
+          reconnectTimeout = setTimeout(connectSSE, 4000);
+        };
+      } catch {
+        reconnectTimeout = setTimeout(connectSSE, 5000);
+      }
+    };
+
+    connectSSE();
+    return () => {
+      es?.close();
+      clearTimeout(reconnectTimeout);
+    };
+  }, [channels, active]);
+
+  const topBarItems = useMemo(() => ['top-assistant', 'top-search', 'top-notif', 'top-cast', 'top-settings'], []);
+
+  const togglePlayPause = useCallback(() => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      showOsd('▶️ Playing', active?.name);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+      showOsd('⏸️ Paused', active?.name);
+    }
+  }, [active, showOsd]);
+
+  const toggleMute = useCallback(() => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsMuted(videoRef.current.muted);
+    showOsd(videoRef.current.muted ? '🔇 Muted' : '🔊 Sound Unmuted', 'Audio');
+  }, [showOsd]);
+
+  const toggleTheater = useCallback(() => {
+    setIsTheaterMode(prev => {
+      const next = !prev;
+      showOsd(next ? '🎬 Theater Mode: ON' : '🎬 Theater Mode: OFF', 'Player View');
+      return next;
+    });
+  }, [showOsd]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+        showOsd('⛶ Full Display: ON', 'Screen View');
+      }).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+        showOsd('⛶ Full Display: OFF', 'Screen View');
+      }).catch(() => {});
+    }
+  }, [showOsd]);
+
+  const volumeUp = useCallback(() => {
+    if (videoRef.current) {
+      const newVol = Math.min(1, Math.round((videoRef.current.volume + 0.1) * 10) / 10);
+      videoRef.current.volume = newVol;
+      showOsd(`🔊 Volume: ${Math.round(newVol * 100)}%`, 'Audio Level');
+    }
+  }, [showOsd]);
+
+  const volumeDown = useCallback(() => {
+    if (videoRef.current) {
+      const newVol = Math.max(0, Math.round((videoRef.current.volume - 0.1) * 10) / 10);
+      videoRef.current.volume = newVol;
+      showOsd(`🔉 Volume: ${Math.round(newVol * 100)}%`, 'Audio Level');
+    }
+  }, [showOsd]);
+
+  const nextChannel = useCallback(() => {
+    if (!active || !channels.length) return;
+    const curIdx = channels.findIndex(c => c.id === active.id);
+    const nextIdx = (curIdx + 1) % channels.length;
+    const nextCh = channels[nextIdx];
+    setActive(nextCh);
+    showOsd(nextCh.name, nextCh.group || 'Live TV', nextCh.logo);
+  }, [active, channels, showOsd]);
+
+  const prevChannel = useCallback(() => {
+    if (!active || !channels.length) return;
+    const curIdx = channels.findIndex(c => c.id === active.id);
+    const prevIdx = (curIdx - 1 + channels.length) % channels.length;
+    const prevCh = channels[prevIdx];
+    setActive(prevCh);
+    showOsd(prevCh.name, prevCh.group || 'Live TV', prevCh.logo);
+  }, [active, channels, showOsd]);
+
+  function toggleFav(c: Channel) {
+    setFavorites(prev => prev.includes(c.id) ? prev.filter(x => x !== c.id) : [...prev, c.id]);
+  }
+
+  function deleteChannel(id: string) {
+    setChannels(prev => prev.filter(c => c.id !== id));
+    setFavorites(prev => prev.filter(fId => fId !== id));
+    if (active?.id === id) setActive(null);
+    setMessage('Channel deleted.');
+  }
+
+  function copyMobileUrl() {
+    navigator.clipboard.writeText(mobileInfo.url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  // Grouped channels
+  const bdChannels = useMemo(() => channels.filter(c => classifyCategory(c) === 'bd'), [channels]);
+  const indianChannels = useMemo(() => channels.filter(c => classifyCategory(c) === 'india'), [channels]);
+  const sportsChannels = useMemo(() => channels.filter(c => classifyCategory(c) === 'sports'), [channels]);
+  const newsChannels = useMemo(() => channels.filter(c => classifyCategory(c) === 'news'), [channels]);
+  const movieChannels = useMemo(() => channels.filter(c => classifyCategory(c) === 'movies'), [channels]);
+  const favoriteChannels = useMemo(() => channels.filter(c => favorites.includes(c.id)), [channels, favorites]);
+
+  const filteredChannels = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return channels.filter(c => c.name.toLowerCase().includes(q) || c.group.toLowerCase().includes(q));
+  }, [channels, query]);
+
+  // Spatial Navigation Layout Structure
+  const navRows = useMemo(() => [
+    {
+      id: 'row-playstore',
+      railId: 'rail-playstore',
+      label: 'Play Store',
+      icon: <PlayStoreIcon size={24} />,
+      iconClass: 'playstore-circle',
+      title: 'Google Play Store (অফিসিয়াল অ্যাপ স্টোর)',
+      items: ['app-playstore']
+    },
+    {
+      id: 'row-apps',
+      railId: 'rail-apps',
+      label: 'Apps',
+      icon: <Grid size={22} color="#ffffff" />,
+      iconClass: 'red-circle',
+      title: 'Android TV Apps',
+      items: featuredAppsRow1.map(a => a.id)
+    },
+    {
+      id: 'row-widgets',
+      railId: 'rail-widgets',
+      label: 'Widgets',
+      icon: <Flame size={22} color="#ffffff" />,
+      iconClass: 'cyan-square',
+      title: 'Smart Widgets & OTT',
+      items: featuredAppsRow2.map(a => a.id)
+    },
+    {
+      id: 'row-bd',
+      railId: 'rail-bd',
+      label: 'Live TV',
+      badge: `${bdChannels.length} BD`,
+      icon: <Tv size={22} color="#ffffff" />,
+      iconClass: 'blue-square',
+      title: 'Bangladeshi Live TV (75 Channels)',
+      items: bdChannels.map(c => c.id)
+    },
+    {
+      id: 'row-india',
+      railId: 'rail-india',
+      label: 'Indian TV',
+      badge: `${indianChannels.length} IN`,
+      icon: <Sparkles size={22} color="#ffffff" />,
+      iconClass: 'purple-square',
+      title: 'Indian Live TV (75 Channels)',
+      items: indianChannels.map(c => c.id)
+    },
+    {
+      id: 'row-sports',
+      railId: 'rail-sports',
+      label: 'Sports',
+      badge: `${sportsChannels.length} Live`,
+      icon: <Trophy size={22} color="#ffffff" />,
+      iconClass: 'green-square',
+      title: 'Live Sports & Cricket',
+      items: sportsChannels.map(c => c.id)
+    },
+    {
+      id: 'row-movies',
+      railId: 'rail-movies',
+      label: 'Movies',
+      icon: <Film size={22} color="#ffffff" />,
+      iconClass: 'orange-square',
+      title: 'Movies & Cinema',
+      items: movieChannels.map(c => c.id)
+    },
+    {
+      id: 'row-news',
+      railId: 'rail-news',
+      label: 'News 24/7',
+      icon: <Newspaper size={22} color="#ffffff" />,
+      iconClass: 'crimson-square',
+      title: '24/7 Breaking News',
+      items: newsChannels.map(c => c.id)
+    }
+  ], [featuredAppsRow1, featuredAppsRow2, bdChannels, indianChannels, sportsChannels, movieChannels, newsChannels]);
+
+  // Handle clicking or activating Left Rail button
+  const handleRailClick = useCallback((row: typeof navRows[0]) => {
+    setMessage(`📂 ${row.title}`);
+    if (row.railId === 'rail-playstore') {
+      setShowPlayStoreHub(true);
+      return;
+    }
+    const rowEl = document.getElementById(row.id);
+    if (rowEl) {
+      rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (row.items && row.items.length > 0) {
+      setFocusedId(row.items[0]);
+    } else {
+      setFocusedId(row.railId);
+    }
+  }, [openOttApp]);
+
+  // 2D Spatial Navigation
+  const navigateSpatial = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
+    setFocusedId(currentId => {
+      // 1. Is user in Top Bar?
+      const topIdx = topBarItems.indexOf(currentId);
+      if (topIdx !== -1) {
+        if (direction === 'left') {
+          return topBarItems[Math.max(0, topIdx - 1)];
+        }
+        if (direction === 'right') {
+          return topBarItems[Math.min(topBarItems.length - 1, topIdx + 1)];
+        }
+        if (direction === 'down') {
+          return navRows[0]?.items[0] || navRows[0]?.railId || 'app-netflix';
+        }
+        return currentId;
+      }
+
+      // 2. Is user on a Left Rail button?
+      const railRowIdx = navRows.findIndex(r => r.railId === currentId);
+      if (railRowIdx !== -1) {
+        if (direction === 'right') {
+          return navRows[railRowIdx].items[0] || currentId;
+        }
+        if (direction === 'down') {
+          if (railRowIdx < navRows.length - 1) {
+            return navRows[railRowIdx + 1].railId;
+          }
+          return currentId;
+        }
+        if (direction === 'up') {
+          if (railRowIdx === 0) {
+            return 'top-assistant';
+          }
+          return navRows[railRowIdx - 1].railId;
+        }
+        return currentId;
+      }
+
+      // 3. User is on a card inside a row
+      let cardRowIdx = -1;
+      let cardColIdx = -1;
+      for (let r = 0; r < navRows.length; r++) {
+        const cIdx = navRows[r].items.indexOf(currentId);
+        if (cIdx !== -1) {
+          cardRowIdx = r;
+          cardColIdx = cIdx;
+          break;
+        }
+      }
+
+      if (cardRowIdx !== -1) {
+        const row = navRows[cardRowIdx];
+        if (direction === 'left') {
+          if (cardColIdx === 0) {
+            return row.railId;
+          }
+          return row.items[cardColIdx - 1];
+        }
+        if (direction === 'right') {
+          return row.items[Math.min(row.items.length - 1, cardColIdx + 1)];
+        }
+        if (direction === 'down') {
+          if (cardRowIdx < navRows.length - 1) {
+            const nextRow = navRows[cardRowIdx + 1];
+            const targetCol = Math.min(cardColIdx, nextRow.items.length - 1);
+            return nextRow.items[targetCol] || nextRow.railId;
+          }
+          return currentId;
+        }
+        if (direction === 'up') {
+          if (cardRowIdx === 0) {
+            return 'top-search';
+          }
+          const prevRow = navRows[cardRowIdx - 1];
+          const targetCol = Math.min(cardColIdx, prevRow.items.length - 1);
+          return prevRow.items[targetCol] || prevRow.railId;
+        }
+      }
+
+      return navRows[0]?.items[0] || 'app-netflix';
+    });
+  }, [topBarItems, navRows]);
+
+  // Activate focused item
+  const activateSpatial = useCallback(() => {
+    // 1. Top bar activations
+    if (focusedId === 'top-assistant') {
+      setMessage('🎤 Google Voice Search: Search any channel...');
+      searchInputRef.current?.focus();
+      return;
+    }
+    if (focusedId === 'top-search') {
+      searchInputRef.current?.focus();
+      return;
+    }
+    if (focusedId === 'top-notif' || focusedId === 'top-cast') {
+      setShowMobileConnect(true);
+      return;
+    }
+    if (focusedId === 'top-settings') {
+      setShowAdd(true);
+      return;
+    }
+
+    // 2. Left Rail button activations
+    const railRow = navRows.find(r => r.railId === focusedId);
+    if (railRow) {
+      handleRailClick(railRow);
+      return;
+    }
+
+    // 3. Featured App activations
+    const allApps = [PLAY_STORE_APP, ...featuredAppsRow1, ...featuredAppsRow2];
+    const app = allApps.find(a => a.id === focusedId);
+    if (app) {
+      if (app.id === 'app-playstore') {
+        setShowPlayStoreHub(true);
+      } else {
+        openOttApp(app);
+      }
+      return;
+    }
+
+    // 4. Channel activations
+    const channel = channels.find(c => c.id === focusedId);
+    if (channel) {
+      setActive(channel);
+      return;
+    }
+  }, [focusedId, navRows, channels, handleRailClick, openOttApp, featuredAppsRow1, featuredAppsRow2]);
+
+  const backSpatial = useCallback(() => {
+    if (showGoogleModal) {
+      setShowGoogleModal(false);
+      return;
+    }
+    if (showPlayStoreHub) {
+      setShowPlayStoreHub(false);
+      return;
+    }
+    if (activeOtt) {
+      setActiveOtt(null);
+      return;
+    }
+    if (active) {
+      if (showQuickDrawer) {
+        setShowQuickDrawer(false);
+      } else if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else {
+        setActive(null);
+      }
+    } else if (showAdd) {
+      setShowAdd(false);
+    } else if (showMobileConnect) {
+      setShowMobileConnect(false);
+    } else if (query) {
+      setQuery('');
+    } else {
+      // Jump back to Left Rail button of current row
+      const cardRow = navRows.find(r => r.items.includes(focusedId));
+      if (cardRow) {
+        setFocusedId(cardRow.railId);
+      }
+    }
+  }, [showGoogleModal, showPlayStoreHub, activeOtt, active, showQuickDrawer, showAdd, showMobileConnect, query, navRows, focusedId]);
+
+  const homeSpatial = useCallback(() => {
+    if (showGoogleModal) setShowGoogleModal(false);
+    if (showPlayStoreHub) setShowPlayStoreHub(false);
+    if (activeOtt) {
+      if (ottHlsRef.current) {
+        ottHlsRef.current.destroy();
+        ottHlsRef.current = null;
+      }
+      setActiveOtt(null);
+    }
+    if (showQuickDrawer) setShowQuickDrawer(false);
+    if (showAdd) setShowAdd(false);
+    if (showMobileConnect) setShowMobileConnect(false);
+    if (query) setQuery('');
+    if (active) setActive(null);
+    setStoreCategory('all');
+    setStoreSearch('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const mainEl = document.querySelector('.sazib-tv-leanback');
+    if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    setFocusedId('rail-playstore');
+    const rowEl = document.getElementById('row-playstore');
+    if (rowEl) rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showOsd('🏠 হোম স্ক্রিন', 'Sazib TV Home');
+    setMessage('🏠 Sazib TV Home');
+  }, [showGoogleModal, showPlayStoreHub, activeOtt, showQuickDrawer, showAdd, showMobileConnect, query, active, showOsd]);
+
+  // Auto-scroll when focusedId changes
+  useEffect(() => {
+    if (!focusedId) return;
+    const el = document.getElementById(focusedId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    const row = navRows.find(r => r.railId === focusedId || r.items.includes(focusedId));
+    if (row) {
+      const rowEl = document.getElementById(row.id);
+      if (rowEl) {
+        rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [focusedId, navRows]);
+
+  // Keyboard navigation listener
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (e.key === 'Escape') {
+          (e.target as HTMLElement).blur();
+        }
+        return;
+      }
+
+      if (activeOtt) {
+        if (e.key === 'Escape' || e.key === 'Backspace') {
+          e.preventDefault();
+          setActiveOtt(null);
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleFullscreen();
+        }
+        return;
+      }
+
+      if (active) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          backSpatial();
+        } else if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          togglePlayPause();
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleFullscreen();
+        } else if (e.key === 't' || e.key === 'T') {
+          e.preventDefault();
+          toggleTheater();
+        } else if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          toggleMute();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          prevChannel();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          nextChannel();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          volumeDown();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          volumeUp();
+        } else if (e.key === 'c' || e.key === 'C') {
+          e.preventDefault();
+          setShowQuickDrawer(prev => !prev);
+        }
+        return;
+      }
+
+      if (e.key === 'Escape' || e.key === 'Backspace') {
+        e.preventDefault();
+        backSpatial();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigateSpatial('up');
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        navigateSpatial('down');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateSpatial('left');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateSpatial('right');
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        activateSpatial();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        homeSpatial();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [active, activeOtt, backSpatial, togglePlayPause, toggleFullscreen, toggleTheater, toggleMute, prevChannel, nextChannel, volumeDown, volumeUp, navigateSpatial, activateSpatial, homeSpatial]);
+
+  // Mobile remote handler
+  const handleRemoteCommand = useCallback((cmd: { type: string; payload?: any }) => {
+    setMessage(`📱 Mobile Remote: ${cmd.type}`);
+    switch (cmd.type) {
+      case 'play_channel': {
+        const targetId = cmd.payload?.id;
+        const targetName = (cmd.payload?.name || '').toLowerCase();
+        const allApps = [PLAY_STORE_APP, ...featuredAppsRow1, ...featuredAppsRow2];
+        const foundOtt = allApps.find(a => a.id === targetId || a.name.toLowerCase() === targetName);
+        if (foundOtt) {
+          openOttApp(foundOtt);
+          break;
+        }
+        const found = channels.find(c => c.id === targetId || c.name.toLowerCase() === targetName) || cmd.payload;
+        if (found) {
+          setActiveOtt(null);
+          setActive(found);
+          showOsd(found.name, found.group || 'Live TV', found.logo);
+        }
+        break;
+      }
+      case 'play_pause':
+        togglePlayPause();
+        break;
+      case 'next':
+        nextChannel();
+        break;
+      case 'prev':
+        prevChannel();
+        break;
+      case 'theater':
+        toggleTheater();
+        break;
+      case 'fullscreen':
+        toggleFullscreen();
+        break;
+      case 'mute':
+        toggleMute();
+        break;
+      case 'volume_up':
+        volumeUp();
+        break;
+      case 'volume_down':
+        volumeDown();
+        break;
+      case 'menu':
+        setShowQuickDrawer(prev => !prev);
+        break;
+      case 'search':
+        if (active) {
+          setShowQuickDrawer(true);
+          showOsd('🔍 Channel Guide Search', 'Remote');
+        } else {
+          setFocusedId('top-search');
+          searchInputRef.current?.focus();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showOsd('🔍 Search Channels', 'Remote');
+        }
+        break;
+      case 'search_query': {
+        const q = String(cmd.payload || '');
+        setQuery(q);
+        if (active) {
+          setShowQuickDrawer(true);
+          setDrawerQuery(q);
+        }
+        break;
+      }
+      case 'home': {
+        homeSpatial();
+        break;
+      }
+      case 'voice_command': {
+        const speech = String(cmd.payload || '').trim();
+        if (!speech) break;
+        showOsd(`🎤 "${speech}"`, 'Voice Remote');
+
+        const s = speech.toLowerCase();
+        if (/^(home|হোম|গো হোম|হোমে যাও)/i.test(s)) {
+          homeSpatial();
+        } else if (/^(back|exit|পিছনে|ফিরে যাও|ফিরে)/i.test(s)) {
+          backSpatial();
+        } else if (/^(pause|stop|থামো|থাম|বন্ধ|থামাও)/i.test(s)) {
+          if (videoRef.current && !videoRef.current.paused) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          }
+        } else if (/^(play|resume|চালাও|চালু|শুরু)/i.test(s)) {
+          if (videoRef.current && videoRef.current.paused) {
+            videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+          }
+        } else if (/^(mute|মিউট|শব্দ বন্ধ)/i.test(s)) {
+          toggleMute();
+        } else if (/^(unmute|শব্দ চালু|সাউন্ড)/i.test(s)) {
+          if (videoRef.current?.muted) toggleMute();
+        } else if (/^(volume up|vol up|আওয়াজ বাড়াও|শব্দ বাড়াও)/i.test(s)) {
+          volumeUp();
+        } else if (/^(volume down|vol down|আওয়াজ কমাও|শব্দ কমাও)/i.test(s)) {
+          volumeDown();
+        } else if (/^(full\s*screen|ফুল\s*স্ক্রিন|ফুল\s*ডিসপ্লে)/i.test(s)) {
+          toggleFullscreen();
+        } else if (/^(theater|থিয়েটার)/i.test(s)) {
+          toggleTheater();
+        } else if (/^(next|পরেরটা|পরের)/i.test(s)) {
+          nextChannel();
+        } else if (/^(prev|previous|আগেরটা|আগের)/i.test(s)) {
+          prevChannel();
+        } else {
+          // 1. Check OTT Apps first (YouTube, Netflix, Chorki, Toffee, Play Store, etc.)
+          const matchApp = allStoreAndCustom.find(a => {
+            const aname = a.name.toLowerCase();
+            return s.includes(aname) || aname.includes(s) || (a.subtitle && s.includes(a.subtitle.toLowerCase()));
+          }) || (s.includes('play store') || s.includes('প্লে স্টোর') ? PLAY_STORE_APP : null);
+
+          if (matchApp) {
+            openOttApp(matchApp);
+            showOsd(`🚀 ${matchApp.name}`, 'Voice App Launched', matchApp.logo);
+          } else {
+            // 2. Channel voice match
+            const found = channels.find(c => {
+              const name = c.name.toLowerCase();
+              return name.includes(s) || s.includes(name);
+            });
+            if (found) {
+              setActive(found);
+              showOsd(`▶️ ${found.name}`, found.group || 'Voice Match', found.logo);
+            } else {
+              setQuery(speech);
+              if (active) {
+                setShowQuickDrawer(true);
+                setDrawerQuery(speech);
+              }
+            }
+          }
+        }
+        break;
+      }
+      case 'mouse_move': {
+        const { dx, dy } = cmd.payload || { dx: 0, dy: 0 };
+        setVirtualCursor(prev => {
+          const newX = Math.max(5, Math.min(window.innerWidth - 5, prev.x + (dx * 1.5)));
+          const newY = Math.max(5, Math.min(window.innerHeight - 5, prev.y + (dy * 1.5)));
+
+          // Forward mouse move to webview if under webview
+          const wv = document.getElementById('ott-browser-webview') as any;
+          if (wv && typeof wv.sendInputEvent === 'function') {
+            const rect = wv.getBoundingClientRect();
+            const relX = Math.round(newX - rect.left);
+            const relY = Math.round(newY - rect.top);
+            if (relX >= 0 && relX <= rect.width && relY >= 0 && relY <= rect.height) {
+              wv.sendInputEvent({ type: 'mouseMove', x: relX, y: relY });
+            }
+          }
+          return { ...prev, x: newX, y: newY, visible: true };
+        });
+        if (cursorHideTimerRef.current) clearTimeout(cursorHideTimerRef.current);
+        cursorHideTimerRef.current = setTimeout(() => {
+          setVirtualCursor(prev => ({ ...prev, visible: false }));
+        }, 5000);
+        break;
+      }
+      case 'mouse_click': {
+        setVirtualCursor(prev => ({ ...prev, isClicking: true, visible: true }));
+        setTimeout(() => setVirtualCursor(prev => ({ ...prev, isClicking: false })), 200);
+
+        setVirtualCursor(curr => {
+          let handledInWebview = false;
+          const wv = document.getElementById('ott-browser-webview') as any;
+          if (wv && typeof wv.sendInputEvent === 'function') {
+            const rect = wv.getBoundingClientRect();
+            const relX = Math.round(curr.x - rect.left);
+            const relY = Math.round(curr.y - rect.top);
+            if (relX >= 0 && relX <= rect.width && relY >= 0 && relY <= rect.height) {
+              wv.focus();
+              wv.sendInputEvent({ type: 'mouseDown', x: relX, y: relY, button: 'left', clickCount: 1 });
+              wv.sendInputEvent({ type: 'mouseUp', x: relX, y: relY, button: 'left', clickCount: 1 });
+              handledInWebview = true;
+            }
+          }
+
+          if (!handledInWebview) {
+            const el = document.elementFromPoint(curr.x, curr.y) as HTMLElement | null;
+            if (el) {
+              const clickable = el.closest('button, [role="button"], a, .tv-channel-card, .store-app-card, .nav-btn, .assistant-btn, .tab-btn, .sazib-tv-brand') as HTMLElement | null;
+              if (clickable) {
+                clickable.focus?.();
+                clickable.click();
+              } else {
+                el.focus?.();
+                el.click();
+              }
+              try {
+                const evtDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: curr.x, clientY: curr.y, view: window });
+                const evtUp = new MouseEvent('mouseup', { bubbles: true, cancelable: true, clientX: curr.x, clientY: curr.y, view: window });
+                const evtClick = new MouseEvent('click', { bubbles: true, cancelable: true, clientX: curr.x, clientY: curr.y, view: window });
+                el.dispatchEvent(evtDown);
+                el.dispatchEvent(evtUp);
+                el.dispatchEvent(evtClick);
+              } catch {}
+            }
+          }
+          return curr;
+        });
+        break;
+      }
+      case 'mouse_scroll': {
+        const dy = cmd.payload?.dy || 150;
+        let handledInWebview = false;
+        const wv = document.getElementById('ott-browser-webview') as any;
+        if (wv && typeof wv.sendInputEvent === 'function') {
+          const rect = wv.getBoundingClientRect();
+          const relX = Math.round(virtualCursor.x - rect.left);
+          const relY = Math.round(virtualCursor.y - rect.top);
+          if (relX >= 0 && relX <= rect.width && relY >= 0 && relY <= rect.height) {
+            wv.sendInputEvent({ type: 'mouseWheel', x: relX, y: relY, deltaY: -dy });
+            handledInWebview = true;
+          }
+        }
+        if (!handledInWebview) {
+          window.scrollBy({ top: dy, behavior: 'smooth' });
+          const mainEl = document.querySelector('.sazib-tv-leanback');
+          if (mainEl) mainEl.scrollBy({ top: dy, behavior: 'smooth' });
+        }
+        break;
+      }
+      case 'nav': {
+        const key = cmd.payload;
+        if (key === 'ArrowUp') {
+          if (active) prevChannel();
+          else navigateSpatial('up');
+        } else if (key === 'ArrowDown') {
+          if (active) nextChannel();
+          else navigateSpatial('down');
+        } else if (key === 'ArrowLeft') {
+          if (active) volumeDown();
+          else navigateSpatial('left');
+        } else if (key === 'ArrowRight') {
+          if (active) volumeUp();
+          else navigateSpatial('right');
+        } else if (key === 'Enter') {
+          if (active) togglePlayPause();
+          else activateSpatial();
+        } else if (key === 'Escape') {
+          backSpatial();
+        } else if (key === 'Home') {
+          homeSpatial();
+        }
+        break;
+      }
+    }
+  }, [channels, active, togglePlayPause, nextChannel, prevChannel, toggleTheater, toggleFullscreen, toggleMute, volumeUp, volumeDown, navigateSpatial, activateSpatial, backSpatial, homeSpatial, showOsd]);
+
+  return (
+    <div className="sazib-tv-leanback">
+      {/* SINGER / TV FRAME ANDROID TOP BAR */}
+      <header className="leanback-topbar">
+        <div className="topbar-left">
+          {/* Sazib TV Official Brand Logo (Transparent in Top-Left Corner) */}
+          <div
+            className="sazib-tv-brand"
+            title="Sazib TV Home"
+            onClick={homeSpatial}
+          >
+            <img src={sazibTvLogo} alt="Sazib TV" className="sazib-tv-brand-logo-img" />
+          </div>
+
+          {/* Google Assistant Microphone & 4 Colored Dots */}
+          <div className="assistant-search">
+          <button
+            id="top-assistant"
+            type="button"
+            className={`assistant-btn ${focusedId === 'top-assistant' ? 'focused' : ''}`}
+            title="Google Voice Search & Assistant (Enter)"
+            onClick={() => {
+              setMessage('🎤 Google Voice Search: Search any channel...');
+              setFocusedId('top-search');
+              searchInputRef.current?.focus();
+            }}
+            onMouseEnter={() => setFocusedId('top-assistant')}
+          >
+            <div className="assistant-dots">
+              <span className="dot-blue"></span>
+              <span className="dot-red"></span>
+              <span className="dot-yellow"></span>
+              <span className="dot-green"></span>
+            </div>
+            <Search size={16} color="#4285f4" />
+          </button>
+
+          <div
+            id="top-search"
+            className={`search-input-wrap ${focusedId === 'top-search' ? 'focused' : ''}`}
+            onClick={() => {
+              setFocusedId('top-search');
+              searchInputRef.current?.focus();
+            }}
+          >
+            <input
+              ref={searchInputRef}
+              placeholder='Try searching for "Somoy TV", "Sports" or movies...'
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onFocus={() => setFocusedId('top-search')}
+            />
+            {query && <X size={14} className="clear-search" onClick={() => setQuery('')} />}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Status Controls */}
+        <div className="leanback-status">
+          {/* Mobile Remote Notification Pill */}
+          <button
+            id="top-notif"
+            className={`status-btn notif-btn ${focusedId === 'top-notif' ? 'focused' : ''}`}
+            title="Mobile Remote Connected"
+            onClick={() => setShowMobileConnect(true)}
+            onMouseEnter={() => setFocusedId('top-notif')}
+          >
+            <span className="notif-badge">1</span>
+          </button>
+
+          {/* Cast / Source Icon */}
+          <button
+            id="top-cast"
+            className={`status-btn ${focusedId === 'top-cast' ? 'focused' : ''}`}
+            title="FastCast & Mobile Screen (Enter)"
+            onClick={() => setShowMobileConnect(true)}
+            onMouseEnter={() => setFocusedId('top-cast')}
+          >
+            <Cast size={18} />
+          </button>
+
+          {/* Add / Import Playlist */}
+          <button
+            className="status-btn"
+            title="Add Channels & Playlists"
+            onClick={() => setShowAdd(true)}
+          >
+            <Plus size={18} />
+          </button>
+
+          {/* Settings Gear */}
+          <button
+            id="top-settings"
+            className={`status-btn ${focusedId === 'top-settings' ? 'focused' : ''}`}
+            title="Settings & Network (Enter)"
+            onClick={() => setShowAdd(true)}
+            onMouseEnter={() => setFocusedId('top-settings')}
+          >
+            <Settings size={18} />
+          </button>
+
+          {/* Leanback Digital Clock */}
+          <div className="leanback-clock">
+            {currentTime || '9:33'}
+          </div>
+        </div>
+      </header>
+
+      {/* LEANBACK ROWS DASHBOARD */}
+      <main className="leanback-content">
+        {/* SEARCH RESULTS VIEW */}
+        {query ? (
+          <section className="search-results-section">
+            <div className="search-header">
+              <h2>Search Results for "{query}" ({filteredChannels.length})</h2>
+              <p>Click any channel to watch immediately</p>
+            </div>
+            {filteredChannels.length === 0 ? (
+              <div className="search-empty">
+                <Tv size={42} />
+                <p>No channels found. Try another search keyword.</p>
+              </div>
+            ) : (
+              <div className="search-grid">
+                {filteredChannels.map(c => (
+                  <LeanbackChannelCard
+                    key={c.id}
+                    channel={c}
+                    isFocused={focusedId === c.id}
+                    isFav={favorites.includes(c.id)}
+                    onPlay={() => setActive(c)}
+                    onFocus={() => setFocusedId(c.id)}
+                    onFav={() => toggleFav(c)}
+                    onDelete={() => deleteChannel(c.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          /* STANDARD LEANBACK ROWS (EXACTLY LIKE USER'S IMAGE) */
+          <div className="leanback-rows">
+            {/* ROW 0: GOOGLE PLAY STORE LEFT RAIL BUTTON & STORE ACCESS */}
+            <div className="leanback-row" id="row-playstore">
+              <LeanbackRailButton
+                id="rail-playstore"
+                label="Play Store"
+                icon={<PlayStoreIcon size={26} />}
+                iconClass="playstore-circle"
+                isFocused={focusedId === 'rail-playstore'}
+                onFocus={() => setFocusedId('rail-playstore')}
+                onClick={() => handleRailClick(navRows[0])}
+              />
+              <div className="row-cards-scroll">
+                <LeanbackAppCard
+                  key={PLAY_STORE_APP.id}
+                  app={PLAY_STORE_APP}
+                  isFocused={focusedId === PLAY_STORE_APP.id}
+                  onFocus={() => setFocusedId(PLAY_STORE_APP.id)}
+                  onClick={() => setShowPlayStoreHub(true)}
+                />
+              </div>
+            </div>
+
+            {/* ROW 1: APPS (Red 9-dot Icon Rail + Netflix Active Focus Card) */}
+            <div className="leanback-row" id="row-apps">
+              <LeanbackRailButton
+                id="rail-apps"
+                label="Apps"
+                icon={<Grid size={22} color="#ffffff" />}
+                iconClass="red-circle"
+                isFocused={focusedId === 'rail-apps'}
+                onFocus={() => setFocusedId('rail-apps')}
+                onClick={() => handleRailClick(navRows[1])}
+              />
+              <div className="row-cards-scroll">
+                {featuredAppsRow1.map(app => (
+                  <LeanbackAppCard
+                    key={app.id}
+                    app={app}
+                    isFocused={focusedId === app.id}
+                    onFocus={() => setFocusedId(app.id)}
+                    onClick={() => {
+                      if (app.id === 'app-playstore') setShowPlayStoreHub(true);
+                      else openOttApp(app);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ROW 2: WIDGETS & OTT (Cyan Rounded Square Rail + Chorki, Toffee, TVWeb, AccuWeather) */}
+            <div className="leanback-row" id="row-widgets">
+              <LeanbackRailButton
+                id="rail-widgets"
+                label="Widgets"
+                icon={<Flame size={22} color="#ffffff" />}
+                iconClass="cyan-square"
+                isFocused={focusedId === 'rail-widgets'}
+                onFocus={() => setFocusedId('rail-widgets')}
+                onClick={() => handleRailClick(navRows[2])}
+              />
+              <div className="row-cards-scroll">
+                {featuredAppsRow2.map(app => (
+                  <LeanbackAppCard
+                    key={app.id}
+                    app={app}
+                    isFocused={focusedId === app.id}
+                    onFocus={() => setFocusedId(app.id)}
+                    onClick={() => openOttApp(app)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ROW 3: LIVE TV (BANGLADESH) (Blue Screen Rail + Somoy, Jamuna, T Sports, BTV, NTV, RTV) */}
+            <div className="leanback-row" id="row-bd">
+              <LeanbackRailButton
+                id="rail-bd"
+                label="Live TV"
+                badge={`${bdChannels.length} BD`}
+                icon={<Tv size={22} color="#ffffff" />}
+                iconClass="blue-square"
+                isFocused={focusedId === 'rail-bd'}
+                onFocus={() => setFocusedId('rail-bd')}
+                onClick={() => handleRailClick(navRows[3])}
+              />
+              <div className="row-cards-scroll">
+                {bdChannels.map(c => (
+                  <LeanbackChannelCard
+                    key={c.id}
+                    channel={c}
+                    isFocused={focusedId === c.id}
+                    isFav={favorites.includes(c.id)}
+                    onPlay={() => {
+                      setActive(c);
+                      showOsd(c.name, c.group || 'Live TV', c.logo);
+                    }}
+                    onFocus={() => setFocusedId(c.id)}
+                    onFav={() => toggleFav(c)}
+                    onDelete={() => deleteChannel(c.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ROW 4: INDIAN TV (Colors Bangla, Jalsha Movies, Star Sports, Goldmines) */}
+            <div className="leanback-row" id="row-india">
+              <LeanbackRailButton
+                id="rail-india"
+                label="Indian TV"
+                badge={`${indianChannels.length} IN`}
+                icon={<Sparkles size={22} color="#ffffff" />}
+                iconClass="purple-square"
+                isFocused={focusedId === 'rail-india'}
+                onFocus={() => setFocusedId('rail-india')}
+                onClick={() => handleRailClick(navRows[4])}
+              />
+              <div className="row-cards-scroll">
+                {indianChannels.map(c => (
+                  <LeanbackChannelCard
+                    key={c.id}
+                    channel={c}
+                    isFocused={focusedId === c.id}
+                    isFav={favorites.includes(c.id)}
+                    onPlay={() => {
+                      setActive(c);
+                      showOsd(c.name, c.group || 'Live TV', c.logo);
+                    }}
+                    onFocus={() => setFocusedId(c.id)}
+                    onFav={() => toggleFav(c)}
+                    onDelete={() => deleteChannel(c.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ROW 5: SPORTS (T Sports, Star Sports 1, Red Bull TV, DD Sports) */}
+            <div className="leanback-row" id="row-sports">
+              <LeanbackRailButton
+                id="rail-sports"
+                label="Sports"
+                badge={`${sportsChannels.length} Live`}
+                icon={<Trophy size={22} color="#ffffff" />}
+                iconClass="green-square"
+                isFocused={focusedId === 'rail-sports'}
+                onFocus={() => setFocusedId('rail-sports')}
+                onClick={() => handleRailClick(navRows[5])}
+              />
+              <div className="row-cards-scroll">
+                {sportsChannels.map(c => (
+                  <LeanbackChannelCard
+                    key={c.id}
+                    channel={c}
+                    isFocused={focusedId === c.id}
+                    isFav={favorites.includes(c.id)}
+                    onPlay={() => {
+                      setActive(c);
+                      showOsd(c.name, c.group || 'Live TV', c.logo);
+                    }}
+                    onFocus={() => setFocusedId(c.id)}
+                    onFav={() => toggleFav(c)}
+                    onDelete={() => deleteChannel(c.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ROW 6: MOVIES & CINEMA */}
+            <div className="leanback-row" id="row-movies">
+              <LeanbackRailButton
+                id="rail-movies"
+                label="Movies"
+                icon={<Film size={22} color="#ffffff" />}
+                iconClass="orange-square"
+                isFocused={focusedId === 'rail-movies'}
+                onFocus={() => setFocusedId('rail-movies')}
+                onClick={() => handleRailClick(navRows[6])}
+              />
+              <div className="row-cards-scroll">
+                {movieChannels.map(c => (
+                  <LeanbackChannelCard
+                    key={c.id}
+                    channel={c}
+                    isFocused={focusedId === c.id}
+                    isFav={favorites.includes(c.id)}
+                    onPlay={() => {
+                      setActive(c);
+                      showOsd(c.name, c.group || 'Live TV', c.logo);
+                    }}
+                    onFocus={() => setFocusedId(c.id)}
+                    onFav={() => toggleFav(c)}
+                    onDelete={() => deleteChannel(c.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ROW 7: NEWS 24/7 */}
+            <div className="leanback-row" id="row-news">
+              <LeanbackRailButton
+                id="rail-news"
+                label="News 24/7"
+                icon={<Newspaper size={22} color="#ffffff" />}
+                iconClass="crimson-square"
+                isFocused={focusedId === 'rail-news'}
+                onFocus={() => setFocusedId('rail-news')}
+                onClick={() => handleRailClick(navRows[7])}
+              />
+              <div className="row-cards-scroll">
+                {newsChannels.map(c => (
+                  <LeanbackChannelCard
+                    key={c.id}
+                    channel={c}
+                    isFocused={focusedId === c.id}
+                    isFav={favorites.includes(c.id)}
+                    onPlay={() => {
+                      setActive(c);
+                      showOsd(c.name, c.group || 'Live TV', c.logo);
+                    }}
+                    onFocus={() => setFocusedId(c.id)}
+                    onFav={() => toggleFav(c)}
+                    onDelete={() => deleteChannel(c.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Toast Notification */}
+        {message && (
+          <div className="leanback-toast" onClick={() => setMessage('')}>
+            <span>{message}</span>
+            <X size={15} />
+          </div>
+        )}
+      </main>
+
+      {/* FULLSCREEN TV VIDEO PLAYER OVERLAY */}
+      {active && (
+        <div className={`tv-player-overlay ${isTheaterMode ? 'theater-mode' : ''}`} ref={playerOverlayRef}>
+          {/* Top Player HUD */}
+          <div className="tv-player-hud">
+            <button className="tv-round-btn" title="Back to Sazib TV (Esc)" onClick={() => setActive(null)}>
+              <ChevronLeft size={22} />
+            </button>
+
+            <div className="tv-player-meta">
+              {active.logo && (
+                <img
+                  src={active.logo}
+                  alt=""
+                  className="tv-player-logo"
+                  onError={e => (e.currentTarget.style.display = 'none')}
+                />
+              )}
+              <div>
+                <b>{active.name}</b>
+                <span className="tv-badge-pill">{active.group || 'Live TV'}</span>
+              </div>
+            </div>
+
+            <div className="tv-player-controls">
+              <button
+                className={`tv-round-btn ${showQuickDrawer ? 'fav-on' : ''}`}
+                title="Quick Channel Guide (C / Menu)"
+                onClick={() => setShowQuickDrawer(prev => !prev)}
+              >
+                <ListVideo size={18} />
+              </button>
+              <button className="tv-round-btn" title="Previous Channel (Up Arrow)" onClick={prevChannel}>
+                <ChevronLeft size={18} />
+              </button>
+              <button className="tv-round-btn" title="Next Channel (Down Arrow)" onClick={nextChannel}>
+                <ChevronRight size={18} />
+              </button>
+              <button
+                className={`tv-round-btn ${isMuted ? 'fav-on' : ''}`}
+                title="Mute / Unmute (M)"
+                onClick={toggleMute}
+              >
+                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              </button>
+              <button
+                className={`tv-round-btn ${favorites.includes(active.id) ? 'fav-on' : ''}`}
+                title="Favorite"
+                onClick={() => toggleFav(active)}
+              >
+                <Heart size={18} fill={favorites.includes(active.id) ? 'currentColor' : 'none'} />
+              </button>
+              {active.webUrl && (
+                <button
+                  className="tv-round-btn web-btn"
+                  title="Open Official Website (🌐)"
+                  onClick={() => window.open(active.webUrl, '_blank')}
+                  style={{ width: 'auto', padding: '0 10px', gap: '5px' }}
+                >
+                  <Globe2 size={16} />
+                  <span style={{ fontSize: '11px', fontWeight: 700 }}>Web</span>
+                </button>
+              )}
+              <button
+                className={`tv-round-btn ${isTheaterMode ? 'fav-on' : ''}`}
+                title="Theater Mode (T)"
+                onClick={toggleTheater}
+              >
+                <Film size={18} />
+              </button>
+              <button
+                className={`tv-round-btn ${isFullscreen ? 'fav-on' : ''}`}
+                title="Full Screen Display (F)"
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              </button>
+              <button className="tv-round-btn close" title="Exit Player (Esc)" onClick={() => setActive(null)}>
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Video Container */}
+          <div className="tv-video-container">
+            <video
+              ref={videoRef}
+              controls
+              autoPlay
+              playsInline
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onVolumeChange={() => {
+                if (videoRef.current) setIsMuted(videoRef.current.muted);
+              }}
+              onWaiting={() => setIsLoadingStream(true)}
+              onPlaying={() => {
+                setIsLoadingStream(false);
+                setStreamError(false);
+              }}
+              onError={() => {
+                setIsLoadingStream(false);
+                setStreamError(true);
+              }}
+            />
+
+            {/* LIVE STREAM BUFFERING SPINNER */}
+            {isLoadingStream && !streamError && (
+              <div className="tv-player-loading">
+                <div className="tv-spinner"></div>
+                <span>Buffering {active.name}...</span>
+              </div>
+            )}
+
+            {/* ON-SCREEN OSD BANNER */}
+            {playerOsd && (
+              <div className="tv-player-osd">
+                {playerOsd.logo && (
+                  <img
+                    src={playerOsd.logo}
+                    alt=""
+                    className="osd-logo"
+                    onError={e => (e.currentTarget.style.display = 'none')}
+                  />
+                )}
+                <div className="osd-info">
+                  <span className="osd-title">{playerOsd.title}</span>
+                  {playerOsd.sub && <span className="osd-sub">{playerOsd.sub}</span>}
+                </div>
+              </div>
+            )}
+
+            {/* QUICK CHANNEL GUIDE DRAWER */}
+            {showQuickDrawer && (
+              <div className="tv-quick-drawer">
+                <div className="drawer-head">
+                  <h3><Tv size={20} color="#3b82f6" /> Quick Channel Guide</h3>
+                  <button className="tv-round-btn" onClick={() => setShowQuickDrawer(false)}>
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="drawer-search">
+                  <input
+                    placeholder="Filter channels..."
+                    value={drawerQuery}
+                    onChange={e => setDrawerQuery(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="drawer-list">
+                  {channels
+                    .filter(c => !drawerQuery || c.name.toLowerCase().includes(drawerQuery.toLowerCase()))
+                    .map(c => (
+                      <button
+                        key={c.id}
+                        className={`drawer-item ${active.id === c.id ? 'now-playing' : ''}`}
+                        onClick={() => {
+                          setActive(c);
+                          showOsd(c.name, c.group || 'Live TV', c.logo);
+                        }}
+                      >
+                        {c.logo ? (
+                          <img src={c.logo} alt="" onError={e => (e.currentTarget.style.display = 'none')} />
+                        ) : (
+                          <Tv size={18} />
+                        )}
+                        <div>
+                          <div style={{ fontWeight: active.id === c.id ? 'bold' : 'normal' }}>{c.name}</div>
+                          <small style={{ color: '#94a3b8' }}>{c.group || 'Live'}</small>
+                        </div>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {streamError && (
+              <div className="tv-stream-error">
+                <Tv size={42} />
+                <h3>Stream Unavailable</h3>
+                <p>This stream is currently offline or requires provider authorization.</p>
+                <button className="tv-btn primary" onClick={nextChannel}>
+                  Switch to Next Channel <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+            <div className="tv-player-tips">
+              Sazib TV • <b>↑ / ↓</b> Channel change • <b>← / →</b> Volume • <b>Space / OK</b> Play/Pause • <b>T</b> Theater Mode • <b>F</b> Full Display • <b>C</b> Channel Guide • <b>Esc</b> Exit
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP OTT EXPERIENCE OVERLAY (CHORKI, TOFFEE, PLAY STORE, YOUTUBE, NETFLIX, ETC.) */}
+      {activeOtt && (
+        <div className={`tv-ott-overlay ${isFullscreen ? 'fullscreen' : ''}`}>
+          {/* Top Control Bar */}
+          <div className="tv-ott-header">
+            <div className="tv-ott-header-left">
+              <button
+                className="tv-round-btn"
+                title="Back to Sazib TV (Esc)"
+                onClick={() => setActiveOtt(null)}
+              >
+                <ChevronLeft size={22} />
+              </button>
+              <button
+                className="tv-round-btn tv-ott-home-btn"
+                title="হোম স্ক্রিনে ফিরে যান (Home)"
+                onClick={homeSpatial}
+                style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', border: '1px solid #60a5fa', color: '#fff', gap: '6px', padding: '0 14px', width: 'auto', borderRadius: '14px', display: 'flex', alignItems: 'center' }}
+              >
+                <Home size={18} />
+                <span style={{ fontSize: '13px', fontWeight: 700 }}>হোম</span>
+              </button>
+
+              {ottMode === 'web' && (
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    className="tv-round-btn"
+                    title="পিছনে যান (Back)"
+                    onClick={() => {
+                      const wv = document.getElementById('ott-browser-webview') as any;
+                      if (wv && typeof wv.goBack === 'function' && wv.canGoBack()) wv.goBack();
+                      else {
+                        const ifr = document.getElementById('ott-browser-iframe') as HTMLIFrameElement;
+                        try { ifr?.contentWindow?.history.back(); } catch {}
+                      }
+                    }}
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    className="tv-round-btn"
+                    title="সামনে যান (Forward)"
+                    onClick={() => {
+                      const wv = document.getElementById('ott-browser-webview') as any;
+                      if (wv && typeof wv.goForward === 'function' && wv.canGoForward()) wv.goForward();
+                      else {
+                        const ifr = document.getElementById('ott-browser-iframe') as HTMLIFrameElement;
+                        try { ifr?.contentWindow?.history.forward(); } catch {}
+                      }
+                    }}
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                  <button
+                    className="tv-round-btn"
+                    title="হোম পেজে যান"
+                    onClick={() => {
+                      const wv = document.getElementById('ott-browser-webview') as any;
+                      if (wv) wv.src = activeOtt.webUrl || '';
+                      else {
+                        const ifr = document.getElementById('ott-browser-iframe') as HTMLIFrameElement;
+                        if (ifr) ifr.src = activeOtt.webUrl || '';
+                      }
+                    }}
+                  >
+                    <Tv size={16} />
+                  </button>
+                </div>
+              )}
+
+              <div className="tv-ott-brand">
+                <div className="tv-ott-logo-pill">
+                  {activeOtt.id === 'app-playstore' || activeOtt.id === 'rail-playstore' ? (
+                    <PlayStoreIcon size={22} />
+                  ) : (
+                    <Play size={18} color="#00d2ff" />
+                  )}
+                </div>
+                <div>
+                  <b>{activeOtt.name}</b>
+                  <small>{activeOtt.subtitle || 'OTT Platform'}</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="tv-ott-tabs">
+              <button
+                className={`tv-ott-tab-btn ${ottMode === 'web' ? 'active' : ''}`}
+                onClick={() => setOttMode('web')}
+              >
+                <Globe2 size={16} />
+                <span>ওয়েব অ্যাপ</span>
+              </button>
+              {activeOtt.url && (
+                <button
+                  className={`tv-ott-tab-btn ${ottMode === 'stream' ? 'active' : ''}`}
+                  onClick={() => setOttMode('stream')}
+                >
+                  <Film size={16} />
+                  <span>সরাসরি লাইভ স্ট্রিম</span>
+                </button>
+              )}
+            </div>
+
+            <div className="tv-ott-header-right">
+              {activeOtt.webUrl && (
+                <button
+                  className="tv-round-btn window-btn"
+                  title="আলাদা ফুল-ফিচারড টিভি প্লেয়ার উইন্ডোতে চালান"
+                  onClick={() => {
+                    if (window.sazibApi?.openOttWindow) {
+                      window.sazibApi.openOttWindow({ url: activeOtt.webUrl || '', title: activeOtt.name });
+                      showOsd('📺 আলাদা উইন্ডোতে ওপেন হয়েছে', activeOtt.name);
+                    } else {
+                      window.open(activeOtt.webUrl, '_blank', 'width=1320,height=800');
+                    }
+                  }}
+                >
+                  <MonitorPlay size={16} />
+                  <span>আলাদা উইন্ডো</span>
+                </button>
+              )}
+
+              {activeOtt.webUrl && (
+                <button
+                  className="tv-round-btn external-btn"
+                  title="Open in Chrome / Browser"
+                  onClick={() => {
+                    if (window.sazibApi?.openExternal) {
+                      window.sazibApi.openExternal(activeOtt.webUrl || '');
+                    } else {
+                      window.open(activeOtt.webUrl, '_blank');
+                    }
+                  }}
+                >
+                  <ExternalLink size={16} />
+                  <span>ক্রোমে খুলুন</span>
+                </button>
+              )}
+              <button
+                className="tv-round-btn"
+                title="Reload (R)"
+                onClick={() => {
+                  setIsOttIframeLoading(true);
+                  const wv = document.getElementById('ott-browser-webview') as any;
+                  if (wv && typeof wv.reload === 'function') {
+                    wv.reload();
+                  } else {
+                    const iframe = document.getElementById('ott-browser-iframe') as HTMLIFrameElement;
+                    if (iframe) iframe.src = activeOtt.webUrl || '';
+                  }
+                }}
+              >
+                <RefreshCw size={17} />
+              </button>
+              <button
+                className={`tv-round-btn ${isFullscreen ? 'fav-on' : ''}`}
+                title="Full Screen Display (F)"
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              </button>
+              <button
+                className="tv-round-btn close"
+                title="Exit (Esc)"
+                onClick={() => setActiveOtt(null)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* OTT Content Body */}
+          <div className="tv-ott-body">
+            {ottMode === 'web' ? (
+              <div className="tv-ott-web-container">
+                {isOttIframeLoading && (
+                  <div
+                    className="tv-ott-loading-pill"
+                    onClick={() => setIsOttIframeLoading(false)}
+                    style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                    title="ক্লিক করে বন্ধ করুন"
+                  >
+                    <div className="loading-spinner"></div>
+                    <span>{activeOtt.name} ওপেন হচ্ছে...</span>
+                  </div>
+                )}
+                {typeof window !== 'undefined' && (window.sazibApi || navigator.userAgent.includes('Electron')) ? (
+                  <webview
+                    id="ott-browser-webview"
+                    src={activeOtt.webUrl}
+                    partition="persist:sazib_tv_ott"
+                    allowpopups={true}
+                    webpreferences="contextIsolation=false, nodeIntegration=false, webSecurity=false"
+                    className="tv-ott-iframe"
+                    onLoad={() => setIsOttIframeLoading(false)}
+                  ></webview>
+                ) : (
+                  <iframe
+                    id="ott-browser-iframe"
+                    src={activeOtt.webUrl}
+                    title={activeOtt.name}
+                    className="tv-ott-iframe"
+                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture; microphone; camera"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    onLoad={() => setIsOttIframeLoading(false)}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="tv-ott-stream-container">
+                <video
+                  ref={ottVideoRef}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="tv-video-element"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* GOOGLE PLAY STORE & SAZIB TV APP STORE HUB */}
+      {showPlayStoreHub && (
+        <div className="tv-store-overlay">
+          {/* Store Header */}
+          <div className="tv-store-header">
+            <div className="tv-store-brand">
+              <PlayStoreIcon size={36} />
+              <div>
+                <h1>Google Play Store</h1>
+                <span>ANDROID TV APP STORE & HUB</span>
+              </div>
+            </div>
+
+            {/* Google User Profile / Login */}
+            <div className="tv-store-google-account">
+              {googleUser ? (
+                <div className="tv-google-user-pill" onClick={() => setShowGoogleModal(true)} title="Google Account Info & Settings">
+                  <div className="tv-google-avatar">
+                    {googleUser.name ? googleUser.name.charAt(0).toUpperCase() : 'G'}
+                  </div>
+                  <div>
+                    <div style={{ color: '#fff', fontSize: '12.5px', lineHeight: 1.2 }}>{googleUser.name}</div>
+                    <small style={{ color: '#93c5fd', fontSize: '10px' }}>{googleUser.email}</small>
+                  </div>
+                </div>
+              ) : (
+                <button className="tv-google-login-btn" onClick={() => setShowGoogleModal(true)}>
+                  <GoogleGIcon size={18} />
+                  <span>গুগল অ্যাকাউন্টে সাইন ইন করুন</span>
+                </button>
+              )}
+
+              <button
+                className="tv-round-btn close"
+                title="Exit Play Store (Esc)"
+                onClick={() => setShowPlayStoreHub(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Store Categories Tab Bar */}
+          <div className="tv-store-tabs">
+            {[
+              { id: 'all', label: '🌟 সকল অ্যাপস' },
+              { id: 'ott', label: '🎬 ওটিটি ও সিনেমা' },
+              { id: 'live', label: '📺 লাইভ টিভি ও স্পোর্টস' },
+              { id: 'music', label: '🎵 মিউজিক' },
+              { id: 'tools', label: '🛠️ টুলস ও প্লেয়ার' },
+              { id: 'installed', label: `⬇️ ইনস্টলকৃত অ্যাপস (${installedAppIds.length})` },
+              { id: 'custom', label: '➕ নতুন কাস্টম অ্যাপ ইনস্টল' },
+              { id: 'web', label: '🌐 গুগল প্লে ওয়েব (Play.google.com)' }
+            ].map(t => (
+              <button
+                key={t.id}
+                className={`tv-store-tab ${storeCategory === t.id ? 'active' : ''}`}
+                onClick={() => setStoreCategory(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Store Body */}
+          <div className="tv-store-body">
+            {/* Search Input Bar */}
+            {storeCategory !== 'web' && storeCategory !== 'custom' && (
+              <div style={{ marginBottom: '22px', maxWidth: '420px' }}>
+                <input
+                  placeholder="প্লে স্টোরে অ্যাপ খুঁজুন (যেমন: Chorki, Hotstar, VLC)..."
+                  value={storeSearch}
+                  onChange={e => setStoreSearch(e.target.value)}
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '12px',
+                    color: '#ffffff',
+                    padding: '0 16px',
+                    fontSize: '13px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            )}
+
+            {storeCategory === 'web' ? (
+              <div style={{ width: '100%', height: 'calc(100vh - 190px)', background: '#fff', borderRadius: '16px', overflow: 'hidden' }}>
+                <iframe
+                  src="https://play.google.com/store/apps"
+                  title="Google Play Store Official Web"
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                />
+              </div>
+            ) : storeCategory === 'custom' ? (
+              <div className="tv-store-custom-box">
+                <h3>➕ যেকোনো ওয়েব অ্যাপ বা ওটিটি টিভি তে ইনস্টল করুন</h3>
+                <p>পছন্দের যেকোনো ওটিটি বা ওয়েবসাইটের নাম ও লিঙ্ক দিয়ে টিভি হোমস্ক্রিনে নিজস্ব অ্যাপ হিসেবে ইনস্টল করুন।</p>
+                
+                <div className="tv-store-form-group">
+                  <label>অ্যাপের নাম (App Name)</label>
+                  <input
+                    placeholder="যেমন: Facebook Watch, Dailymotion, Sonyliv"
+                    value={customAppName}
+                    onChange={e => setCustomAppName(e.target.value)}
+                  />
+                </div>
+
+                <div className="tv-store-form-group">
+                  <label>ওয়েবসাইট বা স্ট্রিম লিঙ্ক (Web / Stream URL)</label>
+                  <input
+                    placeholder="https://www.example.com"
+                    value={customAppUrl}
+                    onChange={e => setCustomAppUrl(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
+                  <div className="tv-store-form-group">
+                    <label>ক্যাটেগরি (Category)</label>
+                    <select
+                      value={customAppCategory}
+                      onChange={e => setCustomAppCategory(e.target.value as any)}
+                    >
+                      <option value="ott">ওটিটি ও সিনেমা</option>
+                      <option value="live">লাইভ টিভি</option>
+                      <option value="music">মিউজিক</option>
+                      <option value="tools">টুলস ও প্লেয়ার</option>
+                    </select>
+                  </div>
+
+                  <div className="tv-store-form-group">
+                    <label>হোমস্ক্রিন রো (Target Row)</label>
+                    <select
+                      value={customAppRow}
+                      onChange={e => setCustomAppRow(e.target.value as any)}
+                    >
+                      <option value="apps">Apps Row (উপরের রো)</option>
+                      <option value="widgets">Widgets Row (নিচের রো)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  className="tv-btn primary"
+                  style={{ width: '100%', height: '44px' }}
+                  onClick={handleInstallCustomApp}
+                >
+                  📥 অ্যাপ ইনস্টল করে টিভিতে যুক্ত করুন
+                </button>
+              </div>
+            ) : (
+              <div className="tv-store-grid">
+                {filteredStoreApps.map(app => {
+                  const isInstalled = installedAppIds.includes(app.id);
+                  const isInstalling = installingAppId === app.id;
+                  return (
+                    <div key={app.id} className="tv-store-card">
+                      <div className="tv-store-card-head">
+                        <div className="tv-store-app-icon" style={{ background: app.bgColor || '#1e293b' }}>
+                          {app.logo ? (
+                            <img src={app.logo} alt="" onError={e => (e.currentTarget.style.display = 'none')} />
+                          ) : (
+                            <Play size={24} color={app.textColor || '#00d2ff'} />
+                          )}
+                        </div>
+                        <div className="tv-store-app-meta">
+                          <h4 className="tv-store-app-name">{app.name}</h4>
+                          <p className="tv-store-app-dev">{app.developer}</p>
+                          <div className="tv-store-app-stats">
+                            <span className="tv-store-rating">★ {app.rating}</span>
+                            <span>• {app.downloads}</span>
+                            <span>• {app.size}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="tv-store-desc">{app.description}</p>
+
+                      {isInstalling && (
+                        <div style={{ marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#34d399', fontWeight: 600 }}>
+                            <span>ডাউনলোড ও ইনস্টল হচ্ছে...</span>
+                            <span>{installProgress}%</span>
+                          </div>
+                          <div className="tv-store-progress-track">
+                            <div className="tv-store-progress-fill" style={{ width: `${installProgress}%` }}></div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="tv-store-card-actions">
+                        {isInstalled ? (
+                          <>
+                            <button
+                              className="tv-store-btn open"
+                              onClick={() => {
+                                setShowPlayStoreHub(false);
+                                openOttApp(app);
+                              }}
+                            >
+                              <Play size={15} />
+                              <span>ওপেন করুন</span>
+                            </button>
+                            <button
+                              className="tv-store-btn uninstall"
+                              title="টিভি থেকে আনইনস্টল করুন"
+                              onClick={() => uninstallStoreApp(app.id, app.name)}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            className={`tv-store-btn ${isInstalling ? 'installing' : 'install'}`}
+                            disabled={isInstalling}
+                            onClick={() => installStoreApp(app)}
+                          >
+                            <Download size={15} />
+                            <span>{isInstalling ? 'ইনস্টল হচ্ছে...' : 'ইনস্টল করুন'}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* GOOGLE ACCOUNT AUTHENTICATION MODAL */}
+      {showGoogleModal && (
+        <div className="tv-modal-backdrop" onClick={() => setShowGoogleModal(false)}>
+          <div className="tv-modal" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+            <div className="tv-modal-head" style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <GoogleGIcon size={26} />
+                <h2 style={{ fontSize: '20px', margin: 0 }}>Google Play Account</h2>
+              </div>
+              <button className="tv-round-btn" onClick={() => setShowGoogleModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
+                Google Play Store, YouTube, Netflix সহ সকল ওটিটি প্ল্যাটফর্মে সাইন ইন ও পারসিস্টেন্ট সেশন ধরে রাখতে আপনার গুগল অ্যাকাউন্ট যুক্ত করুন।
+              </p>
+
+              {googleUser ? (
+                <div style={{ background: '#131d33', border: '1px solid #283963', borderRadius: '16px', padding: '18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                    <div className="tv-google-avatar" style={{ width: '44px', height: '44px', fontSize: '20px' }}>
+                      {googleUser.name ? googleUser.name.charAt(0).toUpperCase() : 'G'}
+                    </div>
+                    <div>
+                      <b style={{ color: '#fff', fontSize: '16px', display: 'block' }}>{googleUser.name}</b>
+                      <small style={{ color: '#60a5fa', fontSize: '12px' }}>{googleUser.email}</small>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      className="tv-btn secondary"
+                      style={{ flex: 1, color: '#ef4444' }}
+                      onClick={handleGoogleLogout}
+                    >
+                      সাইন আউট করুন
+                    </button>
+                    <button
+                      className="tv-btn primary"
+                      style={{ flex: 1 }}
+                      onClick={() => setShowGoogleModal(false)}
+                    >
+                      ঠিক আছে
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    className="tv-google-login-btn"
+                    style={{ width: '100%', justifyContent: 'center', height: '44px', fontSize: '13.5px' }}
+                    onClick={() => {
+                      if (window.sazibApi?.openGoogleLogin) {
+                        window.sazibApi.openGoogleLogin();
+                      } else {
+                        window.open('https://accounts.google.com/signin', '_blank');
+                      }
+                      showOsd('গুগল লগইন উইন্ডো ওপেন হয়েছে', 'ব্রাউজার উইন্ডো থেকে সাইন ইন করুন');
+                    }}
+                  >
+                    <GoogleGIcon size={20} />
+                    <span>অফিসিয়াল গুগল লগইন উইন্ডো খুলুন</span>
+                  </button>
+
+                  <div style={{ textAlign: 'center', color: '#64748b', fontSize: '11px', margin: '2px 0' }}>
+                    — অথবা আপনার গুগল প্রোফাইল তথ্য দিন —
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11.5px', color: '#cbd5e1', marginBottom: '6px' }}>
+                      গুগল ইমেইল (Gmail)
+                    </label>
+                    <input
+                      style={{ width: '100%', height: '40px', background: '#0a0f1d', border: '1px solid #2b3a62', borderRadius: '10px', color: '#fff', padding: '0 12px', fontSize: '13px' }}
+                      placeholder="example@gmail.com"
+                      value={googleInputEmail}
+                      onChange={e => setGoogleInputEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11.5px', color: '#cbd5e1', marginBottom: '6px' }}>
+                      আপনার নাম
+                    </label>
+                    <input
+                      style={{ width: '100%', height: '40px', background: '#0a0f1d', border: '1px solid #2b3a62', borderRadius: '10px', color: '#fff', padding: '0 12px', fontSize: '13px' }}
+                      placeholder="Sazib"
+                      value={googleInputName}
+                      onChange={e => setGoogleInputName(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    className="tv-btn primary"
+                    style={{ width: '100%', height: '42px', marginTop: '6px' }}
+                    onClick={handleSaveGoogleUser}
+                  >
+                    ✓ অ্যাকাউন্ট সেভ ও কানেক্ট করুন
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WIRELESS SMART MOBILE REMOTE MODAL */}
+      {showMobileConnect && (
+        <div className="tv-modal-backdrop" onClick={() => setShowMobileConnect(false)}>
+          <div className="tv-modal tv-mobile-modal" onClick={e => e.stopPropagation()}>
+            <div className="tv-modal-head">
+              <div>
+                <span className="tv-badge-pill neon">SAZIB TV WIRELESS REMOTE</span>
+                <h2>📱 Connect Smartphone as TV Remote</h2>
+              </div>
+              <button className="tv-round-btn" onClick={() => setShowMobileConnect(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mobile-connect-body">
+              <div className="mobile-qr-card">
+                <img
+                  src={qrCodeDataUrl || `https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(mobileInfo.url)}`}
+                  alt="Scan QR Code"
+                  className="mobile-qr-img"
+                  onError={(e) => {
+                    e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(mobileInfo.url)}`;
+                  }}
+                />
+                <div className="mobile-qr-hint">
+                  <span className="live-pill-dot"></span> Scan with Phone Camera
+                </div>
+              </div>
+
+              <div className="mobile-instructions">
+                <h3>সহজ ২টি ধাপে মোবাইল কানেক্ট করুন:</h3>
+                <ol className="mobile-steps">
+                  <li>
+                    নিশ্চিত করুন আপনার মোবাইল ফোন এবং এই কম্পিউটারটি <b>একই Wi-Fi নেটওয়ার্কে</b> সংযুক্ত আছে।
+                  </li>
+                  <li>
+                    ফোনের ক্যামেরা বা কিউআর কোড স্ক্যানার দিয়ে ওপরের <b>QR Code-টি স্ক্যান করুন</b> অথবা নিচের লিংকটি মোবাইলের ব্রাউজারে টাইপ করুন:
+                  </li>
+                </ol>
+
+                <div className="mobile-url-box">
+                  <code>{mobileInfo.url}</code>
+                  <button className="tv-btn secondary copy-btn" onClick={copyMobileUrl}>
+                    {copied ? <Check size={14} color="#4cd98b" /> : <Copy size={14} />}
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+
+                <div className="mobile-feature-pills">
+                  <span>🎮 Virtual D-Pad Controller</span>
+                  <span>📺 Instant Channel Cast</span>
+                  <span>🔊 Volume & Fullscreen</span>
+                  <span>⚡ Zero Latency Wireless</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD CHANNELS MODAL */}
+      {showAdd && (
+        <div className="tv-modal-backdrop" onClick={() => setShowAdd(false)}>
+          <div className="tv-modal" onClick={e => e.stopPropagation()}>
+            <div className="tv-modal-head">
+              <div>
+                <span className="tv-badge-pill">SAZIB TV SETUP</span>
+                <h2>Add Playlists & Channels</h2>
+              </div>
+              <button className="tv-round-btn" onClick={() => setShowAdd(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick 1-Click Online Presets */}
+            <div className="tv-preset-box">
+              <div className="tv-preset-title">
+                <Sparkles size={15} /> 1-CLICK POPULAR TV PRESETS
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  className="tv-btn secondary"
+                  disabled={busy}
+                  onClick={() => setChannels(DEFAULT_CHANNELS)}
+                >
+                  📺 Reload 170+ Curated BD & Indian TV
+                </button>
+                <button
+                  className="tv-btn secondary"
+                  onClick={() => setShowMobileConnect(true)}
+                >
+                  📱 Mobile Remote Setup
+                </button>
+              </div>
+            </div>
+
+            {/* M3U URL / File Upload */}
+            <div className="tv-form-section">
+              <h3><Link2 size={16} /> Import M3U / M3U8 Playlist URL</h3>
+              <p>Enter any public or private IPTV M3U URL from your provider.</p>
+              <div className="tv-input-row">
+                <input
+                  value={playlistUrl}
+                  onChange={e => setPlaylistUrl(e.target.value)}
+                  placeholder="https://example.com/playlist.m3u8"
+                />
+                <button className="tv-btn primary" disabled={busy} onClick={() => {}}>
+                  {busy ? 'Loading...' : 'Load Playlist'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIRTUAL AIR MOUSE CURSOR */}
+      {virtualCursor.visible && (
+        <div
+          className={`tv-virtual-air-mouse ${virtualCursor.isClicking ? 'clicking' : ''}`}
+          style={{ left: `${virtualCursor.x}px`, top: `${virtualCursor.y}px` }}
+        >
+          <div className="air-mouse-pointer">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="#3b82f6" stroke="#ffffff" strokeWidth="2">
+              <path d="M3 3l7 18 3-7 7-3L3 3z" />
+            </svg>
+          </div>
+          {virtualCursor.isClicking && <div className="air-mouse-ripple"></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// LEANBACK LEFT RAIL BUTTON COMPONENT
+function LeanbackRailButton({
+  id,
+  label,
+  icon,
+  badge,
+  iconClass,
+  isFocused,
+  onFocus,
+  onClick
+}: {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  badge?: string;
+  iconClass: string;
+  isFocused: boolean;
+  onFocus: () => void;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      id={id}
+      type="button"
+      className={`row-rail-btn ${isFocused ? 'focused' : ''}`}
+      onMouseEnter={onFocus}
+      onClick={onClick}
+      title={`${label} - Click to navigate or browse`}
+    >
+      <div className={`rail-icon ${iconClass}`}>
+        {icon}
+      </div>
+      <span className="rail-label">{label}</span>
+      {badge && <span className="rail-badge">{badge}</span>}
+    </button>
+  );
+}
+
+// LEANBACK APP CARD COMPONENT (Matches Netflix focus & Chorki, Toffee, etc.)
+function LeanbackAppCard({
+  app,
+  isFocused,
+  onFocus,
+  onClick
+}: {
+  app: TVApp;
+  isFocused: boolean;
+  onFocus: () => void;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      id={app.id}
+      className={`leanback-app-wrapper ${isFocused ? 'focused' : ''}`}
+      onMouseEnter={onFocus}
+      onClick={onClick}
+    >
+      <div
+        className="leanback-app-card"
+        style={{
+          background: app.bgColor || '#141d33',
+          color: app.textColor || '#ffffff'
+        }}
+      >
+        {app.id === 'app-playstore' ? (
+          <div className="playstore-content">
+            <PlayStoreIcon size={34} />
+            <div className="playstore-text">
+              <b>Google Play</b>
+              <small>STORE</small>
+            </div>
+          </div>
+        ) : app.id === 'app-netflix' ? (
+          <div className="netflix-text">NETFLIX</div>
+        ) : app.id === 'app-chorki' ? (
+          <div className="chorki-text">
+            <span>CH</span>
+            <span className="chorki-play">▶</span>
+            <span>RKI</span>
+          </div>
+        ) : app.id === 'app-toffee' ? (
+          <div className="toffee-content">
+            <span className="toffee-wing">🪽</span>
+            <span className="toffee-text">TOFFEE</span>
+          </div>
+        ) : app.id === 'app-fastcast' ? (
+          <div className="fastcast-content">
+            <Cast size={24} />
+            <span>FastCast</span>
+          </div>
+        ) : app.id === 'app-player' ? (
+          <div className="player-app-content">
+            <div className="play-triangle">▶</div>
+            <span>Player</span>
+          </div>
+        ) : app.id === 'app-prime' ? (
+          <div className="prime-text">prime video</div>
+        ) : app.id === 'app-youtube' ? (
+          <div className="youtube-content">
+            <span className="yt-badge">▶</span>
+            <span className="yt-text">YouTube</span>
+          </div>
+        ) : app.id === 'app-disney' ? (
+          <div className="disney-content">
+            <span className="disney-text">Disney+</span>
+            <span className="hotstar-text">hotstar</span>
+          </div>
+        ) : app.id === 'app-sonyliv' ? (
+          <div className="sonyliv-content">
+            <span className="sony-title">SONY</span>
+            <span className="liv-pill">LIV</span>
+          </div>
+        ) : app.id === 'app-crunchyroll' ? (
+          <div className="crunchyroll-content">
+            <span className="cr-spiral">🌀</span>
+            <span className="cr-name">crunchyroll</span>
+          </div>
+        ) : app.id === 'app-appletv' ? (
+          <div className="appletv-content">
+            <span className="apple-logo-txt">tv+</span>
+          </div>
+        ) : app.id === 'app-spotify' ? (
+          <div className="spotify-content">
+            <div className="spotify-bubble"><Music size={22} color="#1db954" /></div>
+            <span className="spotify-text">Spotify</span>
+          </div>
+        ) : app.id === 'app-hoichoi' ? (
+          <div className="hoichoi-content">
+            <span className="hoichoi-text">hoi!choi</span>
+          </div>
+        ) : app.id === 'app-bongo' ? (
+          <div className="bongo-content">
+            <span className="bongo-circle">B</span>
+            <span className="bongo-text">BONGO</span>
+          </div>
+        ) : app.id === 'app-bioscope' ? (
+          <div className="bioscope-content">
+            <Tv size={24} color="#00a8ff" />
+            <span className="bioscope-text">bioscope</span>
+          </div>
+        ) : app.id === 'app-zee5' ? (
+          <div className="zee5-content">
+            <span className="zee5-box">ZEE5</span>
+          </div>
+        ) : app.id === 'app-iscreen' ? (
+          <div className="iscreen-content">
+            <span className="iscreen-i">i</span>
+            <span className="iscreen-text">Screen</span>
+          </div>
+        ) : app.id === 'app-tvweb' ? (
+          <div className="tvweb-content">
+            <Globe2 size={24} color="#0284c7" />
+            <div>
+              <b>TVWeb</b>
+              <small>Browser for TV</small>
+            </div>
+          </div>
+        ) : app.id === 'app-accuweather' ? (
+          <div className="accu-content">
+            <div className="sun-icon">☀️</div>
+            <div>
+              <b>AccuWeather</b>
+              <small>SUPERIOR ACCURACY</small>
+            </div>
+          </div>
+        ) : app.id === 'app-tsports' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 900, fontSize: '18px', letterSpacing: '1px' }}>
+            <Trophy size={20} color="#ffffff" />
+            <span style={{ color: '#ffffff' }}>T SPORTS</span>
+          </div>
+        ) : app.id === 'app-vlc' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '18px' }}>
+            <span style={{ fontSize: '24px' }}>🟠</span>
+            <span>VLC</span>
+          </div>
+        ) : app.id === 'app-mxplayer' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 900, fontSize: '16px' }}>
+            <Play size={18} fill="#ffffff" />
+            <span>MX PLAYER</span>
+          </div>
+        ) : app.id === 'app-kodi' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 900, fontSize: '19px', letterSpacing: '2px' }}>
+            <span>KODI</span>
+          </div>
+        ) : app.id === 'app-jiocinema' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 900, fontSize: '17px' }}>
+            <span style={{ color: '#ec4899' }}>Jio</span>
+            <span>Cinema</span>
+          </div>
+        ) : app.id === 'app-ytmusic' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 800, fontSize: '16px' }}>
+            <Music size={18} color="#ff0000" />
+            <span>Music</span>
+          </div>
+        ) : (
+          <div className="app-generic">
+            {app.logo ? (
+              <img src={app.logo} alt="" style={{ width: '28px', height: '28px', objectFit: 'contain' }} onError={e => (e.currentTarget.style.display = 'none')} />
+            ) : (
+              <Play size={20} />
+            )}
+            <b>{app.name}</b>
+          </div>
+        )}
+      </div>
+
+      {/* Android TV signature focus label underneath */}
+      <span className="app-focus-label">{app.name}</span>
+    </div>
+  );
+}
+
+// LEANBACK CHANNEL CARD COMPONENT (Matches the Blue & Gradient "TV" Cards in User's Screenshot)
+function LeanbackChannelCard({
+  channel,
+  isFocused,
+  isFav,
+  onPlay,
+  onFocus,
+  onFav,
+  onDelete
+}: {
+  channel: Channel;
+  isFocused: boolean;
+  isFav: boolean;
+  onPlay: () => void;
+  onFocus: () => void;
+  onFav: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div
+      id={channel.id}
+      className={`leanback-channel-wrapper ${isFocused ? 'focused' : ''}`}
+      onMouseEnter={onFocus}
+      onClick={onPlay}
+    >
+      <div className="leanback-channel-card">
+        {/* Authentic Channel Logo or Android TV Screen Symbol */}
+        {channel.logo ? (
+          <img
+            src={channel.logo}
+            alt={channel.name}
+            className="channel-img-logo"
+            onError={e => {
+              e.currentTarget.style.display = 'none';
+              const next = e.currentTarget.nextElementSibling as HTMLElement;
+              if (next) next.style.display = 'flex';
+            }}
+          />
+        ) : null}
+
+        {/* Fallback TV icon with modern gradient */}
+        <div className="channel-tv-fallback" style={{ display: channel.logo ? 'none' : 'flex' }}>
+          <div className="tv-screen-box">
+            <span>TV</span>
+          </div>
+        </div>
+
+        {/* Live Broadcast Badge */}
+        <span className="leanback-live-pill">LIVE</span>
+
+        {/* Quick Favorite Star Button */}
+        <button
+          className={`card-fav-star ${isFav ? 'starred' : ''}`}
+          onClick={e => { e.stopPropagation(); onFav(); }}
+          title={isFav ? 'Unfavorite' : 'Favorite'}
+        >
+          <Star size={14} fill={isFav ? '#ffb703' : 'none'} color={isFav ? '#ffb703' : '#ffffff'} />
+        </button>
+      </div>
+
+      {/* Focus Label Underneath */}
+      <span className="channel-focus-label" title={channel.name}>
+        {channel.name}
+      </span>
+    </div>
+  );
+}

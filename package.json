@@ -1,0 +1,64 @@
+{
+  "name": "sazib-tv",
+  "version": "1.0.0",
+  "description": "Sazib TV - Android TV Player for Windows",
+  "main": "dist-electron/main.js",
+  "author": "Sazib",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "build": "tsc -b && vite build",
+    "build:electron": "tsc -p electron/tsconfig.json",
+    "dist": "npm run build && npm run build:electron && electron-builder --win nsis",
+    "dist:dir": "npm run build && npm run build:electron && electron-builder --win dir",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@types/qrcode": "^1.5.6",
+    "hls.js": "^1.5.17",
+    "lucide-react": "^0.468.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.sazib.tv",
+    "productName": "Sazib TV",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico",
+      "artifactName": "Sazib-TV-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sazib TV"
+    }
+  }
+}

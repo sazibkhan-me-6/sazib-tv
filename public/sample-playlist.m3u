@@ -1,0 +1,4 @@
+#EXTM3U
+# Add only stream URLs you are authorized to use.
+#EXTINF:-1 group-title="My Channels",My Authorized Channel
+https://example.com/your-live-stream.m3u8

@@ -7,7 +7,7 @@ import {
   Maximize, Minimize, RefreshCw, ListVideo, Link2, MonitorPlay, Trash2,
   Download, Sparkles, Music, Wifi, Clock, Star, Flame, Smartphone, QrCode,
   Copy, Check, Cast, Compass, RadioTower, Grid, LogIn, Bell, SlidersHorizontal,
-  ExternalLink, Home
+  ExternalLink, Home, Tablet, Laptop, Monitor
 } from 'lucide-react';
 import type { Channel, XtreamConfig } from './types';
 import defaultChannelsData from './defaultChannels.json';
@@ -529,6 +529,78 @@ function classifyCategory(c: Channel): string {
 
 const CHANNELS_VERSION = 'sazib-tv-v5';
 
+export type DeviceMode = 'auto' | 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'tv';
+export type ActiveDeviceType = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'tv';
+
+function useDeviceLayout() {
+  const [deviceOverride, setDeviceOverride] = useState<DeviceMode>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_device_mode');
+      if (saved && ['auto', 'mobile', 'tablet', 'laptop', 'desktop', 'tv'].includes(saved)) {
+        return saved as DeviceMode;
+      }
+    } catch {}
+    return 'auto';
+  });
+
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1280));
+  const [windowHeight, setWindowHeight] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 720));
+  const [isPortrait, setIsPortrait] = useState(() => (typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false));
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  const detectedType = useMemo((): ActiveDeviceType => {
+    if (typeof window === 'undefined') return 'desktop';
+    const ua = navigator.userAgent.toLowerCase();
+    const isTV = ua.includes('googletv') || ua.includes('android tv') || ua.includes('smarttv') || 
+                 ua.includes('tizen') || ua.includes('webos') || ua.includes('netcast') || 
+                 ua.includes('large screen') || ua.includes('appletv') || ua.includes('mibox') || ua.includes('firetv');
+    if (isTV) return 'tv';
+    
+    if (windowWidth < 640) return 'mobile';
+    if (windowWidth <= 1024) return 'tablet';
+    if (windowWidth <= 1440) return 'laptop';
+    if (windowWidth >= 1680) return 'tv';
+    return 'desktop';
+  }, [windowWidth]);
+
+  const activeDevice = deviceOverride === 'auto' ? detectedType : deviceOverride;
+
+  const updateDeviceMode = useCallback((mode: DeviceMode) => {
+    setDeviceOverride(mode);
+    try {
+      localStorage.setItem('sazib_device_mode', mode);
+    } catch {}
+  }, []);
+
+  return {
+    activeDevice,
+    detectedType,
+    deviceOverride,
+    updateDeviceMode,
+    windowWidth,
+    windowHeight,
+    isPortrait,
+    isMobile: activeDevice === 'mobile',
+    isTablet: activeDevice === 'tablet',
+    isLaptop: activeDevice === 'laptop',
+    isDesktop: activeDevice === 'desktop',
+    isTV: activeDevice === 'tv',
+  };
+}
+
 export default function App() {
   const [channels, setChannels] = useState<Channel[]>(() => {
     try {
@@ -566,6 +638,8 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [showMobileConnect, setShowMobileConnect] = useState(false);
+  const [showDeviceMenu, setShowDeviceMenu] = useState(false);
+  const device = useDeviceLayout();
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [xtream, setXtream] = useState<XtreamConfig>({ host: '', username: '', password: '' });
   const [message, setMessage] = useState('');
@@ -1951,7 +2025,7 @@ export default function App() {
   }, [channels, active, togglePlayPause, nextChannel, prevChannel, toggleTheater, toggleFullscreen, toggleMute, volumeUp, volumeDown, navigateSpatial, activateSpatial, backSpatial, homeSpatial, showOsd]);
 
   return (
-    <div className="sazib-tv-leanback">
+    <div className={`sazib-tv-leanback device-${device.activeDevice} ${device.isPortrait ? 'is-portrait' : 'is-landscape'}`}>
       {/* SINGER / TV FRAME ANDROID TOP BAR */}
       <header className="leanback-topbar">
         <div className="topbar-left">
@@ -2050,6 +2124,92 @@ export default function App() {
           >
             <Settings size={18} />
           </button>
+
+          {/* Quick Device Mode Selector */}
+          <div className="device-switcher-wrap">
+            <button
+              className="status-btn device-mode-pill"
+              title={`ডিভাইস সিস্টেম: ${device.activeDevice.toUpperCase()} (${device.deviceOverride === 'auto' ? 'Auto' : 'Manual'})`}
+              onClick={() => setShowDeviceMenu(prev => !prev)}
+            >
+              {device.activeDevice === 'mobile' && <Smartphone size={16} color="#4ade80" />}
+              {device.activeDevice === 'tablet' && <Tablet size={16} color="#a78bfa" />}
+              {device.activeDevice === 'laptop' && <Laptop size={16} color="#fbbf24" />}
+              {device.activeDevice === 'desktop' && <Monitor size={16} color="#f472b6" />}
+              {device.activeDevice === 'tv' && <Tv size={16} color="#38bdf8" />}
+              <span className="device-name-text">
+                {device.activeDevice === 'mobile' ? 'Mobile' : 
+                 device.activeDevice === 'tablet' ? 'Tablet' : 
+                 device.activeDevice === 'laptop' ? 'Laptop' : 
+                 device.activeDevice === 'tv' ? 'TV' : 'PC'}
+              </span>
+            </button>
+            {showDeviceMenu && (
+              <div className="device-menu-dropdown">
+                <div className="device-menu-title">🖥️ ডিভাইস ও সিস্টেম লেআউট</div>
+                <button
+                  className={`device-menu-item ${device.deviceOverride === 'auto' ? 'selected' : ''}`}
+                  onClick={() => { device.updateDeviceMode('auto'); setShowDeviceMenu(false); showOsd('⚡ অটো মোড সক্রিয়', `ডিটেক্টেড: ${device.detectedType.toUpperCase()}`); }}
+                >
+                  <Sparkles size={16} color="#38bdf8" />
+                  <div>
+                    <b>⚡ অটো ডিটেক্ট (Auto System)</b>
+                    <small>স্ক্রিন সাইজ অনুযায়ী স্বয়ংক্রিয় অ্যাডাপ্ট</small>
+                  </div>
+                </button>
+                <button
+                  className={`device-menu-item ${device.deviceOverride === 'mobile' ? 'selected' : ''}`}
+                  onClick={() => { device.updateDeviceMode('mobile'); setShowDeviceMenu(false); showOsd('📱 মোবাইল মোড সক্রিয়', 'স্মার্টফোন টাচ ও বটম বার লেআউট'); }}
+                >
+                  <Smartphone size={16} color="#4ade80" />
+                  <div>
+                    <b>📱 স্মার্টফোন / মোবাইল</b>
+                    <small>টাচ বটম নেভিগেশন ও কমপ্যাক্ট গ্রিড</small>
+                  </div>
+                </button>
+                <button
+                  className={`device-menu-item ${device.deviceOverride === 'tablet' ? 'selected' : ''}`}
+                  onClick={() => { device.updateDeviceMode('tablet'); setShowDeviceMenu(false); showOsd('📲 ট্যাবলেট মোড সক্রিয়', 'আইপ্যাড ও ট্যাবলেট অপ্টিমাইজড ভিউ'); }}
+                >
+                  <Tablet size={16} color="#a78bfa" />
+                  <div>
+                    <b>📲 ট্যাবলেট / আইপ্যাড</b>
+                    <small>৩-৪ কলাম টাচ ফ্রেন্ডলি ভিউ</small>
+                  </div>
+                </button>
+                <button
+                  className={`device-menu-item ${device.deviceOverride === 'laptop' ? 'selected' : ''}`}
+                  onClick={() => { device.updateDeviceMode('laptop'); setShowDeviceMenu(false); showOsd('💻 ল্যাপটপ মোড সক্রিয়', 'মাউস, কীবোর্ড ও ট্র্যাকপ্যাড অপ্টিমাইজড'); }}
+                >
+                  <Laptop size={16} color="#fbbf24" />
+                  <div>
+                    <b>💻 ল্যাপটপ (Laptop)</b>
+                    <small>কীবোর্ড শর্টকাট ও ফ্লুইড স্ক্রলিং</small>
+                  </div>
+                </button>
+                <button
+                  className={`device-menu-item ${device.deviceOverride === 'desktop' ? 'selected' : ''}`}
+                  onClick={() => { device.updateDeviceMode('desktop'); setShowDeviceMenu(false); showOsd('🖥️ পিসি / ডেস্কটপ মোড সক্রিয়', 'ওয়াইডস্ক্রিন ও মাল্টি-উইন্ডো মোড'); }}
+                >
+                  <Monitor size={16} color="#f472b6" />
+                  <div>
+                    <b>🖥️ পিসি / ডেস্কটপ (PC Desktop)</b>
+                    <small>ফুলস্ক্রিন, থিয়েটার ও হাইপার স্পিড</small>
+                  </div>
+                </button>
+                <button
+                  className={`device-menu-item ${device.deviceOverride === 'tv' ? 'selected' : ''}`}
+                  onClick={() => { device.updateDeviceMode('tv'); setShowDeviceMenu(false); showOsd('📺 স্মার্ট টিভি মোড সক্রিয়', '১০-ফুট লিনব্যাক ও ডি-প্যাড রিমোট ভিউ'); }}
+                >
+                  <Tv size={16} color="#38bdf8" />
+                  <div>
+                    <b>📺 স্মার্ট টিভি (10-ft Leanback)</b>
+                    <small>রিমোট কন্ট্রোলার ও বিগ-স্ক্রিন ফোকাস</small>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Leanback Digital Clock */}
           <div className="leanback-clock">
@@ -3160,6 +3320,57 @@ export default function App() {
               </button>
             </div>
 
+            {/* Device & System Mode Selection Box */}
+            <div className="tv-preset-box" style={{ background: '#111b33', borderColor: '#38bdf8' }}>
+              <div className="tv-preset-title" style={{ color: '#38bdf8' }}>
+                <Monitor size={15} /> ডিভাইস ও ডিসপ্লে মোড (DEVICE & SYSTEM LAYOUT)
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginTop: '10px' }}>
+                <button
+                  className={`tv-btn secondary ${device.deviceOverride === 'auto' ? 'primary' : ''}`}
+                  onClick={() => { device.updateDeviceMode('auto'); showOsd('⚡ অটো মোড সক্রিয়', `ডিটেক্টেড: ${device.detectedType.toUpperCase()}`); }}
+                  style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
+                >
+                  <Sparkles size={14} /> ⚡ অটো (Auto)
+                </button>
+                <button
+                  className={`tv-btn secondary ${device.activeDevice === 'mobile' ? 'primary' : ''}`}
+                  onClick={() => { device.updateDeviceMode('mobile'); showOsd('📱 মোবাইল মোড সক্রিয়', 'স্মার্টফোন টাচ ও বটম বার লেআউট'); }}
+                  style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
+                >
+                  <Smartphone size={14} /> 📱 মোবাইল
+                </button>
+                <button
+                  className={`tv-btn secondary ${device.activeDevice === 'tablet' ? 'primary' : ''}`}
+                  onClick={() => { device.updateDeviceMode('tablet'); showOsd('📲 ট্যাবলেট মোড সক্রিয়', 'আইপ্যাড ও ট্যাবলেট অপ্টিমাইজড ভিউ'); }}
+                  style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
+                >
+                  <Tablet size={14} /> 📲 ট্যাবলেট
+                </button>
+                <button
+                  className={`tv-btn secondary ${device.activeDevice === 'laptop' ? 'primary' : ''}`}
+                  onClick={() => { device.updateDeviceMode('laptop'); showOsd('💻 ল্যাপটপ মোড সক্রিয়', 'মাউস ও ট্র্যাকপ্যাড অপ্টিমাইজড'); }}
+                  style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
+                >
+                  <Laptop size={14} /> 💻 ল্যাপটপ
+                </button>
+                <button
+                  className={`tv-btn secondary ${device.activeDevice === 'desktop' ? 'primary' : ''}`}
+                  onClick={() => { device.updateDeviceMode('desktop'); showOsd('🖥️ পিসি মোড সক্রিয়', 'ওয়াইডস্ক্রিন ও মাল্টি-উইন্ডো মোড'); }}
+                  style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
+                >
+                  <Monitor size={14} /> 🖥️ পিসি
+                </button>
+                <button
+                  className={`tv-btn secondary ${device.activeDevice === 'tv' ? 'primary' : ''}`}
+                  onClick={() => { device.updateDeviceMode('tv'); showOsd('📺 স্মার্ট টিভি মোড সক্রিয়', '১০-ফুট লিনব্যাক ও ডি-প্যাড রিমোট ভিউ'); }}
+                  style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
+                >
+                  <Tv size={14} /> 📺 টিভি
+                </button>
+              </div>
+            </div>
+
             {/* Quick 1-Click Online Presets */}
             <div className="tv-preset-box">
               <div className="tv-preset-title">
@@ -3200,6 +3411,57 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* MOBILE BOTTOM NAVIGATION BAR */}
+      <nav className="mobile-bottom-nav">
+        <button
+          className={`mob-nav-item ${focusedId === 'rail-playstore' && !active && !showPlayStoreHub && !showAdd && !showMobileConnect ? 'active' : ''}`}
+          onClick={homeSpatial}
+        >
+          <Home size={20} />
+          <span>হোম</span>
+        </button>
+        <button
+          className={`mob-nav-item ${active ? 'active' : ''}`}
+          onClick={() => {
+            if (active) {
+              setShowQuickDrawer(true);
+            } else {
+              const el = document.getElementById('row-somoy') || document.getElementById('row-sports');
+              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              showOsd('📺 সরাসরি লাইভ টিভি', 'চ্যানেল লিস্ট স্ক্রল করা হয়েছে');
+            }
+          }}
+        >
+          <Tv size={20} />
+          <span>টিভি</span>
+        </button>
+        <button
+          className={`mob-nav-item ${showPlayStoreHub || activeOtt ? 'active' : ''}`}
+          onClick={() => {
+            const el = document.getElementById('row-widgets') || document.getElementById('row-apps');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showOsd('🎬 ওটিটি ও অ্যাপস', 'ইউটিউব, নেটফ্লিক্স, চরকি, টফি...');
+          }}
+        >
+          <Grid size={20} />
+          <span>ওটিটি</span>
+        </button>
+        <button
+          className={`mob-nav-item ${showMobileConnect ? 'active' : ''}`}
+          onClick={() => setShowMobileConnect(true)}
+        >
+          <Smartphone size={20} />
+          <span>রিমোট</span>
+        </button>
+        <button
+          className={`mob-nav-item ${showAdd ? 'active' : ''}`}
+          onClick={() => setShowAdd(true)}
+        >
+          <Settings size={20} />
+          <span>সেটিংস</span>
+        </button>
+      </nav>
 
       {/* VIRTUAL AIR MOUSE CURSOR */}
       {virtualCursor.visible && (

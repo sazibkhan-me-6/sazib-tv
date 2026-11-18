@@ -2078,3 +2078,501 @@ button {
   border-radius: 6px;
 }
 
+/* ==================== MULTI-DEVICE RESPONSIVE SYSTEM ==================== */
+
+/* Device Mode Switcher Pill in Topbar */
+.device-switcher-wrap {
+  position: relative;
+}
+
+.device-mode-pill {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 0 12px !important;
+  height: 38px !important;
+  background: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+  border-radius: 20px !important;
+  color: #e2e8f0 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.device-mode-pill:hover {
+  background: rgba(56, 189, 248, 0.18) !important;
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+}
+
+.device-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 290px;
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.device-menu-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  padding: 8px 12px 4px;
+}
+
+.device-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #f1f5f9;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.device-menu-item:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.device-menu-item.selected {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(124, 58, 237, 0.25));
+  border-color: #38bdf8;
+}
+
+.device-menu-item b {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.device-menu-item small {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(10, 16, 32, 0.94);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.mob-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  flex: 1;
+  max-width: 80px;
+}
+
+.mob-nav-item:active {
+  transform: scale(0.92);
+}
+
+.mob-nav-item.active {
+  color: #38bdf8;
+  transform: translateY(-2px);
+}
+
+.mob-nav-item.active svg {
+  stroke: #38bdf8;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+/* ==================== 1. MOBILE SMARTPHONE LAYOUT (< 640px or .device-mobile) ==================== */
+@media (max-width: 640px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+}
+.device-mobile .mobile-bottom-nav {
+  display: flex !important;
+}
+
+@media (max-width: 640px) {
+  .sazib-tv-leanback {
+    padding-bottom: 74px !important;
+  }
+  .leanback-topbar {
+    height: 56px !important;
+    padding: 0 12px !important;
+  }
+  .topbar-left {
+    gap: 8px !important;
+  }
+  .sazib-tv-brand-logo-img {
+    height: 28px !important;
+  }
+  .assistant-dots {
+    display: none !important;
+  }
+  .assistant-btn {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+  }
+  .search-input-wrap {
+    height: 36px !important;
+    padding: 0 8px !important;
+  }
+  .search-input-wrap input {
+    font-size: 12px !important;
+    width: 85px;
+  }
+  .search-input-wrap.focused input {
+    width: 130px;
+  }
+  .leanback-status {
+    gap: 6px !important;
+  }
+  .leanback-clock {
+    display: none !important;
+  }
+  .status-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .device-name-text {
+    display: none !important;
+  }
+  .device-mode-pill {
+    padding: 0 8px !important;
+  }
+  .leanback-content {
+    padding: 10px 12px 60px !important;
+  }
+  .leanback-rows {
+    gap: 16px !important;
+  }
+  .leanback-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+  .row-rail-btn {
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding: 4px 8px !important;
+    gap: 10px !important;
+    height: auto !important;
+  }
+  .rail-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+  .rail-label {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+  }
+  .row-cards-scroll {
+    padding: 4px 0 12px !important;
+    gap: 12px !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .leanback-app-wrapper {
+    flex: 0 0 140px !important;
+    scroll-snap-align: start !important;
+  }
+  .leanback-app-card {
+    height: 90px !important;
+    border-radius: 14px !important;
+  }
+  .leanback-channel-wrapper {
+    flex: 0 0 160px !important;
+    scroll-snap-align: start !important;
+  }
+  .leanback-channel-card {
+    height: 96px !important;
+    border-radius: 14px !important;
+  }
+  /* Modals on Mobile */
+  .tv-modal {
+    width: 100% !important;
+    max-width: 96vw !important;
+    padding: 18px 14px !important;
+    border-radius: 18px !important;
+    max-height: 92vh !important;
+  }
+  /* OTT & Store Header on Mobile */
+  .tv-ott-header, .tv-store-header {
+    height: auto !important;
+    min-height: 52px !important;
+    padding: 8px 12px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .tv-store-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  /* Player on Mobile */
+  .tv-player-hud {
+    padding: 8px 10px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .tv-player-controls {
+    gap: 4px !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+  }
+  .tv-round-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* Also apply above when .device-mobile is active regardless of screen width */
+.device-mobile .sazib-tv-leanback {
+  padding-bottom: 74px !important;
+}
+.device-mobile .leanback-row {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+.device-mobile .row-rail-btn {
+  flex-direction: row !important;
+  width: 100% !important;
+  justify-content: flex-start !important;
+  padding: 4px 8px !important;
+  gap: 10px !important;
+  height: auto !important;
+}
+.device-mobile .rail-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+}
+.device-mobile .leanback-app-wrapper {
+  flex: 0 0 145px !important;
+}
+.device-mobile .leanback-channel-wrapper {
+  flex: 0 0 165px !important;
+}
+.device-mobile .row-cards-scroll {
+  scroll-snap-type: x mandatory !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* ==================== 2. TABLET LAYOUT (641px - 1024px or .device-tablet) ==================== */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .leanback-topbar {
+    height: 62px !important;
+    padding: 0 20px !important;
+  }
+  .leanback-content {
+    padding: 10px 20px 40px !important;
+  }
+  .row-rail-btn {
+    width: 76px !important;
+  }
+  .rail-icon {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .leanback-app-wrapper {
+    flex: 0 0 170px !important;
+  }
+  .leanback-channel-wrapper {
+    flex: 0 0 195px !important;
+  }
+  .tv-store-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  }
+}
+.device-tablet .leanback-topbar {
+  height: 62px !important;
+  padding: 0 20px !important;
+}
+.device-tablet .leanback-content {
+  padding: 10px 20px 40px !important;
+}
+.device-tablet .row-rail-btn {
+  width: 76px !important;
+}
+.device-tablet .rail-icon {
+  width: 48px !important;
+  height: 48px !important;
+}
+.device-tablet .leanback-app-wrapper {
+  flex: 0 0 170px !important;
+}
+.device-tablet .leanback-channel-wrapper {
+  flex: 0 0 195px !important;
+}
+
+/* ==================== 3. LAPTOP LAYOUT (1025px - 1440px or .device-laptop) ==================== */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .leanback-topbar {
+    height: 66px;
+    padding: 0 32px;
+  }
+  .leanback-content {
+    padding: 10px 32px 50px;
+  }
+  .row-rail-btn {
+    width: 84px;
+  }
+  .rail-icon {
+    width: 54px;
+    height: 54px;
+  }
+  .leanback-app-wrapper {
+    flex: 0 0 190px;
+  }
+  .leanback-channel-wrapper {
+    flex: 0 0 215px;
+  }
+}
+.device-laptop .leanback-topbar {
+  height: 66px;
+  padding: 0 32px;
+}
+.device-laptop .row-rail-btn {
+  width: 84px;
+}
+.device-laptop .leanback-app-wrapper {
+  flex: 0 0 190px;
+}
+.device-laptop .leanback-channel-wrapper {
+  flex: 0 0 215px;
+}
+
+/* ==================== 4. PC / DESKTOP LAYOUT (1441px - 1679px or .device-desktop) ==================== */
+@media (min-width: 1441px) and (max-width: 1679px) {
+  .leanback-topbar {
+    height: 72px;
+    padding: 0 44px;
+  }
+  .leanback-content {
+    padding: 10px 44px 50px;
+  }
+  .row-rail-btn {
+    width: 90px;
+  }
+  .leanback-app-wrapper {
+    flex: 0 0 200px;
+  }
+  .leanback-channel-wrapper {
+    flex: 0 0 230px;
+  }
+}
+.device-desktop .leanback-topbar {
+  height: 72px;
+  padding: 0 44px;
+}
+.device-desktop .row-rail-btn {
+  width: 90px;
+}
+.device-desktop .leanback-app-wrapper {
+  flex: 0 0 200px;
+}
+.device-desktop .leanback-channel-wrapper {
+  flex: 0 0 230px;
+}
+
+/* ==================== 5. SMART TV LEANBACK LAYOUT (>= 1680px or .device-tv) ==================== */
+@media (min-width: 1680px) {
+  .sazib-tv-leanback {
+    font-size: 17px;
+  }
+  .leanback-topbar {
+    height: 80px;
+    padding: 0 60px;
+  }
+  .leanback-content {
+    padding: 16px 60px 80px;
+  }
+  .row-rail-btn {
+    width: 105px;
+  }
+  .rail-icon {
+    width: 68px;
+    height: 68px;
+  }
+  .leanback-app-wrapper {
+    flex: 0 0 240px;
+  }
+  .leanback-channel-wrapper {
+    flex: 0 0 270px;
+  }
+}
+.device-tv {
+  font-size: 17px;
+}
+.device-tv .leanback-topbar {
+  height: 80px;
+  padding: 0 60px;
+}
+.device-tv .leanback-content {
+  padding: 16px 60px 80px;
+}
+.device-tv .row-rail-btn {
+  width: 105px;
+}
+.device-tv .rail-icon {
+  width: 68px;
+  height: 68px;
+}
+.device-tv .leanback-app-wrapper {
+  flex: 0 0 240px;
+}
+.device-tv .leanback-channel-wrapper {
+  flex: 0 0 270px;
+}
+/* Enhanced High-Contrast Focus Ring for TV 10-Foot Distance */
+.device-tv .leanback-app-card.focused,
+.device-tv .leanback-channel-card.focused,
+.device-tv .row-rail-btn.focused .rail-icon {
+  outline: 4px solid #38bdf8 !important;
+  box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.4), 0 20px 50px rgba(0, 0, 0, 0.8) !important;
+  transform: scale(1.08) !important;
+  z-index: 10 !important;
+}
+

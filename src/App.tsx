@@ -594,6 +594,14 @@ function useDeviceLayout() {
     return 'auto';
   });
 
+  const [autoRotate, setAutoRotate] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_auto_rotate');
+      if (saved !== null) return saved === 'true';
+    } catch {}
+    return true; // Default ON for phones and tablets
+  });
+
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1280));
   const [windowHeight, setWindowHeight] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 720));
 
@@ -603,9 +611,63 @@ function useDeviceLayout() {
       setWindowHeight(window.innerHeight);
     };
     window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleResize, { passive: true });
+    if (typeof window !== 'undefined' && window.screen && window.screen.orientation) {
+      window.screen.orientation.addEventListener('change', handleResize);
+    }
+
+    // When auto-rotate is enabled, unlock orientation lock so phone/tablet rotates freely
+    if (autoRotate && typeof screen !== 'undefined' && screen.orientation && screen.orientation.unlock) {
+      try {
+        screen.orientation.unlock();
+      } catch {}
+    }
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      if (typeof window !== 'undefined' && window.screen && window.screen.orientation) {
+        window.screen.orientation.removeEventListener('change', handleResize);
+      }
     };
+  }, [autoRotate]);
+
+  const toggleAutoRotate = useCallback(() => {
+    setAutoRotate(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sazib_auto_rotate', String(next));
+      } catch {}
+      if (next && typeof screen !== 'undefined' && screen.orientation && screen.orientation.unlock) {
+        try {
+          screen.orientation.unlock();
+        } catch {}
+      }
+      return next;
+    });
+  }, []);
+
+  const manualRotate = useCallback(() => {
+    try {
+      if (typeof screen !== 'undefined' && screen.orientation) {
+        const isCurrentPortrait = window.innerHeight > window.innerWidth;
+        if (isCurrentPortrait) {
+          if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().then(() => {
+              (screen.orientation as any).lock?.('landscape').catch(() => {});
+            }).catch(() => {
+              (screen.orientation as any).lock?.('landscape').catch(() => {});
+            });
+          } else {
+            (screen.orientation as any).lock?.('landscape').catch(() => {});
+          }
+        } else {
+          (screen.orientation as any).lock?.('portrait').catch(() => {
+            screen.orientation.unlock?.();
+          });
+        }
+      }
+    } catch {}
   }, []);
 
   const detectedType = useMemo((): ActiveDeviceType => {
@@ -616,12 +678,15 @@ function useDeviceLayout() {
                  ua.includes('large screen') || ua.includes('appletv') || ua.includes('mibox') || ua.includes('firetv');
     if (isTV) return 'tv';
     
-    if (windowWidth < 640) return 'mobile';
-    if (windowWidth <= 1024) return 'tablet';
+    const minDim = Math.min(windowWidth, windowHeight);
+    const maxDim = Math.max(windowWidth, windowHeight);
+
+    if (minDim < 600 && maxDim < 960) return 'mobile';
+    if (minDim <= 840 && maxDim <= 1366) return 'tablet';
     if (windowWidth <= 1440) return 'laptop';
     if (windowWidth >= 1680) return 'tv';
     return 'desktop';
-  }, [windowWidth]);
+  }, [windowWidth, windowHeight]);
 
   const activeDevice = deviceOverride === 'auto' ? detectedType : deviceOverride;
 
@@ -637,6 +702,9 @@ function useDeviceLayout() {
     detectedType,
     deviceOverride,
     updateDeviceMode,
+    autoRotate,
+    toggleAutoRotate,
+    manualRotate,
     windowWidth,
     windowHeight,
     isMobile: activeDevice === 'mobile',
@@ -2335,9 +2403,48 @@ export default function App() {
                     <small>রিমোট কন্ট্রোলার ও বিগ-স্ক্রিন ফোকাস</small>
                   </div>
                 </button>
+
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '6px 0' }} />
+                <div className="device-menu-title">🔄 স্ক্রিন রোটেশন কন্ট্রোল</div>
+                <button
+                  className={`device-menu-item ${device.autoRotate ? 'selected' : ''}`}
+                  onClick={() => {
+                    const next = !device.autoRotate;
+                    device.toggleAutoRotate();
+                    showOsd(
+                      next ? '🔄 অটো রোটেট চালু' : '🔒 অটো রোটেট বন্ধ',
+                      next ? 'মোবাইল ও ট্যাবলেট ঘোরালে স্ক্রিন স্বয়ংক্রিয় রোটেট হবে' : 'স্ক্রিন রোটেশন লক করা হয়েছে'
+                    );
+                  }}
+                >
+                  <RefreshCw size={16} color={device.autoRotate ? '#4ade80' : '#94a3b8'} />
+                  <div>
+                    <b>🔄 অটো রোটেট: {device.autoRotate ? 'চালু (ON)' : 'বন্ধ (OFF)'}</b>
+                    <small>{device.autoRotate ? 'ডিভাইস ঘোরালে অটোমেটিক রোটেট হবে' : 'ক্লিক করে চালু করুন'}</small>
+                  </div>
+                </button>
               </div>
             )}
           </div>
+
+          {/* Mobile & Tablet Auto-Rotate Option Pill */}
+          <button
+            className={`status-btn auto-rotate-pill ${device.autoRotate ? 'active' : ''}`}
+            title={`অটো রোটেট: ${device.autoRotate ? 'চালু (ON)' : 'বন্ধ (OFF)'} - ক্লিক করে পরিবর্তন করুন`}
+            onClick={() => {
+              const next = !device.autoRotate;
+              device.toggleAutoRotate();
+              showOsd(
+                next ? '🔄 অটো রোটেট চালু' : '🔒 অটো রোটেট বন্ধ',
+                next ? 'মোবাইল ও ট্যাবলেট ঘোরালে স্ক্রিন স্বয়ংক্রিয় রোটেট হবে' : 'স্ক্রিন রোটেশন লক করা হয়েছে'
+              );
+            }}
+          >
+            <RefreshCw size={15} className={`rotate-icon ${device.autoRotate ? 'spinning-enabled' : ''}`} />
+            <span className="auto-rotate-text">
+              {device.autoRotate ? 'Auto Rotate ON' : 'Rotate OFF'}
+            </span>
+          </button>
 
           {/* Leanback Digital Clock */}
           <div className="leanback-clock">
@@ -2693,6 +2800,16 @@ export default function App() {
                 <Film size={18} />
               </button>
               <button
+                className={`tv-round-btn ${device.autoRotate ? 'fav-on' : ''}`}
+                title={`অটো রোটেট (${device.autoRotate ? 'চালু' : 'বন্ধ'}) / স্ক্রিন রোটেট`}
+                onClick={() => {
+                  device.manualRotate();
+                  showOsd('🔄 স্ক্রিন রোটেট', 'ডিসপ্লে রোটেট করা হয়েছে');
+                }}
+              >
+                <RefreshCw size={18} />
+              </button>
+              <button
                 className={`tv-round-btn ${isFullscreen ? 'fav-on' : ''}`}
                 title="Full Screen Display (F)"
                 onClick={toggleFullscreen}
@@ -2969,6 +3086,16 @@ export default function App() {
                 }}
               >
                 <RefreshCw size={17} />
+              </button>
+              <button
+                className={`tv-round-btn ${device.autoRotate ? 'fav-on' : ''}`}
+                title={`অটো রোটেট (${device.autoRotate ? 'চালু' : 'বন্ধ'}) / স্ক্রিন রোটেট`}
+                onClick={() => {
+                  device.manualRotate();
+                  showOsd('🔄 স্ক্রিন রোটেট', 'ডিসপ্লে রোটেট করা হয়েছে');
+                }}
+              >
+                <RefreshCw size={18} />
               </button>
               <button
                 className={`tv-round-btn ${isFullscreen ? 'fav-on' : ''}`}
@@ -3500,6 +3627,31 @@ export default function App() {
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
                   <Tv size={14} /> 📺 টিভি
+                </button>
+              </div>
+
+              {/* Auto Rotate Control Row for Phones & Tablets */}
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <RefreshCw size={16} color={device.autoRotate ? '#4ade80' : '#94a3b8'} />
+                  <div>
+                    <b style={{ fontSize: '13px', color: '#fff' }}>🔄 ফোন ও ট্যাবলেট অটো-রোটেট (Auto-Rotate)</b>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>ফোন বা ট্যাবলেট ঘোরালে ডিসপ্লে স্বয়ংক্রিয়ভাবে পোর্ট্রেট ও ল্যান্ডস্কেপ হবে</div>
+                  </div>
+                </div>
+                <button
+                  className={`tv-btn ${device.autoRotate ? 'primary' : 'secondary'}`}
+                  onClick={() => {
+                    const next = !device.autoRotate;
+                    device.toggleAutoRotate();
+                    showOsd(
+                      next ? '🔄 অটো রোটেট চালু' : '🔒 অটো রোটেট বন্ধ',
+                      next ? 'ফোন বা ট্যাবলেট ঘোরালে স্ক্রিন স্বয়ংক্রিয় রোটেট হবে' : 'স্ক্রিন রোটেশন লক করা হয়েছে'
+                    );
+                  }}
+                  style={{ fontSize: '12px', height: '34px', padding: '0 14px' }}
+                >
+                  {device.autoRotate ? 'চালু (ON) ✓' : 'বন্ধ (OFF)'}
                 </button>
               </div>
             </div>

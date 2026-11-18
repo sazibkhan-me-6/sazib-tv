@@ -545,19 +545,15 @@ function useDeviceLayout() {
 
   const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1280));
   const [windowHeight, setWindowHeight] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 720));
-  const [isPortrait, setIsPortrait] = useState(() => (typeof window !== 'undefined' ? window.innerHeight > window.innerWidth : false));
 
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
       setWindowHeight(window.innerHeight);
-      setIsPortrait(window.innerHeight > window.innerWidth);
     };
     window.addEventListener('resize', handleResize, { passive: true });
-    window.addEventListener('orientationchange', handleResize, { passive: true });
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
     };
   }, []);
 
@@ -592,7 +588,6 @@ function useDeviceLayout() {
     updateDeviceMode,
     windowWidth,
     windowHeight,
-    isPortrait,
     isMobile: activeDevice === 'mobile',
     isTablet: activeDevice === 'tablet',
     isLaptop: activeDevice === 'laptop',
@@ -2025,7 +2020,7 @@ export default function App() {
   }, [channels, active, togglePlayPause, nextChannel, prevChannel, toggleTheater, toggleFullscreen, toggleMute, volumeUp, volumeDown, navigateSpatial, activateSpatial, backSpatial, homeSpatial, showOsd]);
 
   return (
-    <div className={`sazib-tv-leanback device-${device.activeDevice} ${device.isPortrait ? 'is-portrait' : 'is-landscape'}`}>
+    <div className={`sazib-tv-leanback device-${device.activeDevice}`}>
       {/* SINGER / TV FRAME ANDROID TOP BAR */}
       <header className="leanback-topbar">
         <div className="topbar-left">

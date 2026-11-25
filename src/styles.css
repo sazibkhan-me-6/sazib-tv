@@ -2643,3 +2643,248 @@ button {
   transform: rotate(180deg);
 }
 
+/* ==================== ACCOUNT LOGIN & PROFILE SYSTEM ==================== */
+.account-login-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: auto !important;
+  height: 36px;
+  padding: 0 14px !important;
+  border-radius: 9999px !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.85), rgba(59, 130, 246, 0.85)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.5) !important;
+  color: #ffffff !important;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.account-login-pill:hover,
+.account-login-pill.focused {
+  background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55);
+}
+
+.account-login-pill.logged-in {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  padding: 0 12px 0 6px !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.account-login-pill.logged-in:hover,
+.account-login-pill.logged-in.focused {
+  background: rgba(16, 185, 129, 0.28) !important;
+  border-color: #34d399 !important;
+}
+
+.account-avatar-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.account-name-text {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-modal-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-tab-btn.active {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.auth-error-banner {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.auth-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.auth-input-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 12px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.auth-input-wrap input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px 0 38px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-input-wrap input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 12px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.account-profile-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.account-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.account-avatar-large {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #2563eb);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+}
+
+.account-member-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.account-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.account-stat-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.account-stat-box b {
+  display: block;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.account-stat-box small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+

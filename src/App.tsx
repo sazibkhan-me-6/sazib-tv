@@ -7,7 +7,7 @@ import {
   Maximize, Minimize, RefreshCw, ListVideo, Link2, MonitorPlay, Trash2,
   Download, Sparkles, Music, Wifi, Clock, Star, Flame, Smartphone, QrCode,
   Copy, Check, Cast, Compass, RadioTower, Grid, LogIn, Bell, SlidersHorizontal,
-  ExternalLink, Home, Tablet, Laptop, Monitor
+  ExternalLink, Home, Tablet, Laptop, Monitor, User, LogOut, Lock, Mail, ShieldCheck, UserPlus
 } from 'lucide-react';
 import type { Channel, XtreamConfig } from './types';
 import defaultChannelsData from './defaultChannels.json';
@@ -752,7 +752,24 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [showMobileConnect, setShowMobileConnect] = useState(false);
-  const [showDeviceMenu, setShowDeviceMenu] = useState(false);
+
+  // Sazib TV Account Authentication System State
+  type SazibAccount = { id: string; name: string; identifier: string; password: string; createdAt: string };
+  const [currentUser, setCurrentUser] = useState<Omit<SazibAccount, 'password'> | null>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_tv_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
+  const [authName, setAuthName] = useState('');
+  const [authIdentifier, setAuthIdentifier] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+
   const device = useDeviceLayout();
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [xtream, setXtream] = useState<XtreamConfig>({ host: '', username: '', password: '' });
@@ -965,6 +982,85 @@ export default function App() {
     setShowGoogleModal(false);
     showOsd('✓ গুগল প্লে কানেক্টেড', email);
   }, [googleInputEmail, googleInputName, showOsd]);
+
+  const handleAccountSignup = useCallback((e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthError('');
+    const name = authName.trim();
+    const identifier = authIdentifier.trim().toLowerCase();
+    const password = authPassword.trim();
+    if (!name || !identifier || !password) {
+      setAuthError('অনুগ্রহ করে আপনার নাম, ইমেইল/মোবাইল এবং পাসওয়ার্ড দিন।');
+      return;
+    }
+    if (password.length < 4) {
+      setAuthError('পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।');
+      return;
+    }
+    try {
+      const existingRaw = localStorage.getItem('sazib_tv_accounts');
+      const accounts: SazibAccount[] = existingRaw ? JSON.parse(existingRaw) : [];
+      if (accounts.some(acc => acc.identifier === identifier)) {
+        setAuthError('এই ইমেইল বা মোবাইল নম্বর দিয়ে ইতিমধ্যেই অ্যাকাউন্ট আছে। অনুগ্রহ করে লগইন করুন।');
+        return;
+      }
+      const newAcc: SazibAccount = {
+        id: 'usr-' + Date.now(),
+        name,
+        identifier,
+        password,
+        createdAt: new Date().toLocaleDateString()
+      };
+      accounts.push(newAcc);
+      localStorage.setItem('sazib_tv_accounts', JSON.stringify(accounts));
+      const sessionUser = { id: newAcc.id, name: newAcc.name, identifier: newAcc.identifier, createdAt: newAcc.createdAt };
+      setCurrentUser(sessionUser);
+      localStorage.setItem('sazib_tv_current_user', JSON.stringify(sessionUser));
+      setAuthName('');
+      setAuthIdentifier('');
+      setAuthPassword('');
+      setShowAccountModal(false);
+      showOsd(`✓ স্বাগতম, ${name}!`, 'Sazib TV অ্যাকাউন্ট তৈরি ও লগইন সফল হয়েছে');
+    } catch {
+      setAuthError('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    }
+  }, [authName, authIdentifier, authPassword, showOsd]);
+
+  const handleAccountLogin = useCallback((e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthError('');
+    const identifier = authIdentifier.trim().toLowerCase();
+    const password = authPassword.trim();
+    if (!identifier || !password) {
+      setAuthError('অনুগ্রহ করে ইমেইল/মোবাইল এবং পাসওয়ার্ড দিন।');
+      return;
+    }
+    try {
+      const existingRaw = localStorage.getItem('sazib_tv_accounts');
+      const accounts: SazibAccount[] = existingRaw ? JSON.parse(existingRaw) : [];
+      const matched = accounts.find(acc => acc.identifier === identifier && acc.password === password);
+      if (!matched) {
+        setAuthError('ইমেইল/মোবাইল অথবা পাসওয়ার্ড সঠিক নয়। নতুন হলে Sign Up করুন।');
+        return;
+      }
+      const sessionUser = { id: matched.id, name: matched.name, identifier: matched.identifier, createdAt: matched.createdAt };
+      setCurrentUser(sessionUser);
+      localStorage.setItem('sazib_tv_current_user', JSON.stringify(sessionUser));
+      setAuthIdentifier('');
+      setAuthPassword('');
+      setShowAccountModal(false);
+      showOsd(`✓ লগইন সফল • ${matched.name}`, 'Sazib TV অ্যাকাউন্টে স্বাগতম');
+    } catch {
+      setAuthError('লগইন করতে সমস্যা হয়েছে।');
+    }
+  }, [authIdentifier, authPassword, showOsd]);
+
+  const handleAccountLogout = useCallback(() => {
+    setCurrentUser(null);
+    localStorage.removeItem('sazib_tv_current_user');
+    setShowAccountModal(false);
+    showOsd('লগআউট সম্পন্ন', 'আপনি সফলভাবে সাইন আউট করেছেন');
+  }, [showOsd]);
 
   const filteredStoreApps = useMemo(() => {
     let list = allStoreAndCustom;
@@ -1468,7 +1564,7 @@ export default function App() {
     };
   }, [channels, active]);
 
-  const topBarItems = useMemo(() => ['top-assistant', 'top-search', 'top-notif', 'top-cast', 'top-settings'], []);
+  const topBarItems = useMemo(() => ['top-assistant', 'top-search', 'top-notif', 'top-cast', 'top-settings', 'top-account'], []);
 
   const togglePlayPause = useCallback(() => {
     if (!videoRef.current) return;
@@ -1864,6 +1960,10 @@ export default function App() {
       setShowAdd(true);
       return;
     }
+    if (focusedId === 'top-account') {
+      setShowAccountModal(true);
+      return;
+    }
 
     // 2. Left Rail button activations
     const railRow = navRows.find(r => r.railId === focusedId);
@@ -1893,6 +1993,10 @@ export default function App() {
   }, [focusedId, navRows, channels, handleRailClick, openOttApp, featuredAppsRow1, featuredAppsRow2]);
 
   const backSpatial = useCallback(() => {
+    if (showAccountModal) {
+      setShowAccountModal(false);
+      return;
+    }
     if (showGoogleModal) {
       setShowGoogleModal(false);
       return;
@@ -1925,9 +2029,10 @@ export default function App() {
         setFocusedId(cardRow.railId);
       }
     }
-  }, [showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, showQuickDrawer, closePlayer, showAdd, showMobileConnect, query, navRows, focusedId]);
+  }, [showAccountModal, showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, showQuickDrawer, closePlayer, showAdd, showMobileConnect, query, navRows, focusedId]);
 
   const homeSpatial = useCallback(() => {
+    if (showAccountModal) setShowAccountModal(false);
     if (showGoogleModal) setShowGoogleModal(false);
     if (showPlayStoreHub) setShowPlayStoreHub(false);
     if (activeOtt) {
@@ -1950,7 +2055,7 @@ export default function App() {
     if (rowEl) rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showOsd('🏠 হোম স্ক্রিন', 'Sazib TV Home');
     setMessage('🏠 Sazib TV Home');
-  }, [showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, closePlayer, showQuickDrawer, showAdd, showMobileConnect, query, showOsd]);
+  }, [showAccountModal, showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, closePlayer, showQuickDrawer, showAdd, showMobileConnect, query, showOsd]);
 
   // Auto-scroll when focusedId changes
   useEffect(() => {
@@ -2404,129 +2509,30 @@ export default function App() {
             <Settings size={18} />
           </button>
 
-          {/* Quick Device Mode Selector */}
-          <div className="device-switcher-wrap">
-            <button
-              className="status-btn device-mode-pill"
-              title={`ডিভাইস সিস্টেম: ${device.activeDevice.toUpperCase()} (${device.deviceOverride === 'auto' ? 'Auto' : 'Manual'})`}
-              onClick={() => setShowDeviceMenu(prev => !prev)}
-            >
-              {device.activeDevice === 'mobile' && <Smartphone size={16} color="#4ade80" />}
-              {device.activeDevice === 'tablet' && <Tablet size={16} color="#a78bfa" />}
-              {device.activeDevice === 'laptop' && <Laptop size={16} color="#fbbf24" />}
-              {device.activeDevice === 'desktop' && <Monitor size={16} color="#f472b6" />}
-              {device.activeDevice === 'tv' && <Tv size={16} color="#38bdf8" />}
-              <span className="device-name-text">
-                {device.activeDevice === 'mobile' ? 'Mobile' : 
-                 device.activeDevice === 'tablet' ? 'Tablet' : 
-                 device.activeDevice === 'laptop' ? 'Laptop' : 
-                 device.activeDevice === 'tv' ? 'TV' : 'PC'}
-              </span>
-            </button>
-            {showDeviceMenu && (
-              <div className="device-menu-dropdown">
-                <div className="device-menu-title">🖥️ ডিভাইস ও সিস্টেম লেআউট</div>
-                <button
-                  className={`device-menu-item ${device.deviceOverride === 'auto' ? 'selected' : ''}`}
-                  onClick={() => { device.updateDeviceMode('auto'); setShowDeviceMenu(false); showOsd('⚡ অটো মোড সক্রিয়', `ডিটেক্টেড: ${device.detectedType.toUpperCase()}`); }}
-                >
-                  <Sparkles size={16} color="#38bdf8" />
-                  <div>
-                    <b>⚡ অটো ডিটেক্ট (Auto System)</b>
-                    <small>স্ক্রিন সাইজ অনুযায়ী স্বয়ংক্রিয় অ্যাডাপ্ট</small>
-                  </div>
-                </button>
-                <button
-                  className={`device-menu-item ${device.deviceOverride === 'mobile' ? 'selected' : ''}`}
-                  onClick={() => { device.updateDeviceMode('mobile'); setShowDeviceMenu(false); showOsd('📱 মোবাইল মোড সক্রিয়', 'স্মার্টফোন টাচ ও বটম বার লেআউট'); }}
-                >
-                  <Smartphone size={16} color="#4ade80" />
-                  <div>
-                    <b>📱 স্মার্টফোন / মোবাইল</b>
-                    <small>টাচ বটম নেভিগেশন ও কমপ্যাক্ট গ্রিড</small>
-                  </div>
-                </button>
-                <button
-                  className={`device-menu-item ${device.deviceOverride === 'tablet' ? 'selected' : ''}`}
-                  onClick={() => { device.updateDeviceMode('tablet'); setShowDeviceMenu(false); showOsd('📲 ট্যাবলেট মোড সক্রিয়', 'আইপ্যাড ও ট্যাবলেট অপ্টিমাইজড ভিউ'); }}
-                >
-                  <Tablet size={16} color="#a78bfa" />
-                  <div>
-                    <b>📲 ট্যাবলেট / আইপ্যাড</b>
-                    <small>৩-৪ কলাম টাচ ফ্রেন্ডলি ভিউ</small>
-                  </div>
-                </button>
-                <button
-                  className={`device-menu-item ${device.deviceOverride === 'laptop' ? 'selected' : ''}`}
-                  onClick={() => { device.updateDeviceMode('laptop'); setShowDeviceMenu(false); showOsd('💻 ল্যাপটপ মোড সক্রিয়', 'মাউস, কীবোর্ড ও ট্র্যাকপ্যাড অপ্টিমাইজড'); }}
-                >
-                  <Laptop size={16} color="#fbbf24" />
-                  <div>
-                    <b>💻 ল্যাপটপ (Laptop)</b>
-                    <small>কীবোর্ড শর্টকাট ও ফ্লুইড স্ক্রলিং</small>
-                  </div>
-                </button>
-                <button
-                  className={`device-menu-item ${device.deviceOverride === 'desktop' ? 'selected' : ''}`}
-                  onClick={() => { device.updateDeviceMode('desktop'); setShowDeviceMenu(false); showOsd('🖥️ পিসি / ডেস্কটপ মোড সক্রিয়', 'ওয়াইডস্ক্রিন ও মাল্টি-উইন্ডো মোড'); }}
-                >
-                  <Monitor size={16} color="#f472b6" />
-                  <div>
-                    <b>🖥️ পিসি / ডেস্কটপ (PC Desktop)</b>
-                    <small>ফুলস্ক্রিন, থিয়েটার ও হাইপার স্পিড</small>
-                  </div>
-                </button>
-                <button
-                  className={`device-menu-item ${device.deviceOverride === 'tv' ? 'selected' : ''}`}
-                  onClick={() => { device.updateDeviceMode('tv'); setShowDeviceMenu(false); showOsd('📺 স্মার্ট টিভি মোড সক্রিয়', '১০-ফুট লিনব্যাক ও ডি-প্যাড রিমোট ভিউ'); }}
-                >
-                  <Tv size={16} color="#38bdf8" />
-                  <div>
-                    <b>📺 স্মার্ট টিভি (10-ft Leanback)</b>
-                    <small>রিমোট কন্ট্রোলার ও বিগ-স্ক্রিন ফোকাস</small>
-                  </div>
-                </button>
-
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '6px 0' }} />
-                <div className="device-menu-title">🔄 স্ক্রিন রোটেশন কন্ট্রোল</div>
-                <button
-                  className={`device-menu-item ${device.autoRotate ? 'selected' : ''}`}
-                  onClick={() => {
-                    const next = !device.autoRotate;
-                    device.toggleAutoRotate();
-                    showOsd(
-                      next ? '🔄 অটো রোটেট চালু' : '🔒 অটো রোটেট বন্ধ',
-                      next ? 'মোবাইল ও ট্যাবলেট ঘোরালে স্ক্রিন স্বয়ংক্রিয় রোটেট হবে' : 'স্ক্রিন রোটেশন লক করা হয়েছে'
-                    );
-                  }}
-                >
-                  <RefreshCw size={16} color={device.autoRotate ? '#4ade80' : '#94a3b8'} />
-                  <div>
-                    <b>🔄 অটো রোটেট: {device.autoRotate ? 'চালু (ON)' : 'বন্ধ (OFF)'}</b>
-                    <small>{device.autoRotate ? 'ডিভাইস ঘোরালে অটোমেটিক রোটেট হবে' : 'ক্লিক করে চালু করুন'}</small>
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile & Tablet Auto-Rotate Option Pill */}
+          {/* Account Login / User Profile Button */}
           <button
-            className={`status-btn auto-rotate-pill ${device.autoRotate ? 'active' : ''}`}
-            title={`অটো রোটেট: ${device.autoRotate ? 'চালু (ON)' : 'বন্ধ (OFF)'} - ক্লিক করে পরিবর্তন করুন`}
+            id="top-account"
+            className={`status-btn account-login-pill ${currentUser ? 'logged-in' : ''} ${focusedId === 'top-account' ? 'focused' : ''}`}
+            title={currentUser ? `${currentUser.name} (${currentUser.identifier})` : 'অ্যাকাউন্ট লগইন / সাইন আপ করুন'}
             onClick={() => {
-              const next = !device.autoRotate;
-              device.toggleAutoRotate();
-              showOsd(
-                next ? '🔄 অটো রোটেট চালু' : '🔒 অটো রোটেট বন্ধ',
-                next ? 'মোবাইল ও ট্যাবলেট ঘোরালে স্ক্রিন স্বয়ংক্রিয় রোটেট হবে' : 'স্ক্রিন রোটেশন লক করা হয়েছে'
-              );
+              setAuthError('');
+              setShowAccountModal(true);
             }}
+            onMouseEnter={() => setFocusedId('top-account')}
           >
-            <RefreshCw size={15} className={`rotate-icon ${device.autoRotate ? 'spinning-enabled' : ''}`} />
-            <span className="auto-rotate-text">
-              {device.autoRotate ? 'Auto Rotate ON' : 'Rotate OFF'}
-            </span>
+            {currentUser ? (
+              <>
+                <span className="account-avatar-mini">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="account-name-text">{currentUser.name.split(' ')[0]}</span>
+              </>
+            ) : (
+              <>
+                <LogIn size={16} />
+                <span className="account-name-text">Login</span>
+              </>
+            )}
           </button>
 
           {/* Leanback Digital Clock */}
@@ -3476,6 +3482,180 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SAZIB TV ACCOUNT LOGIN / SIGN UP / PROFILE MODAL */}
+      {showAccountModal && (
+        <div className="tv-modal-backdrop" onClick={() => setShowAccountModal(false)}>
+          <div className="tv-modal account-auth-modal" style={{ maxWidth: '460px' }} onClick={e => e.stopPropagation()}>
+            <div className="tv-modal-head" style={{ marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="account-modal-icon-badge">
+                  {currentUser ? <ShieldCheck size={22} color="#4ade80" /> : <User size={22} color="#60a5fa" />}
+                </div>
+                <div>
+                  <span className="tv-badge-pill">SAZIB TV ACCOUNT</span>
+                  <h2 style={{ fontSize: '20px', margin: '2px 0 0' }}>
+                    {currentUser ? 'আমার অ্যাকাউন্ট' : (authTab === 'login' ? 'অ্যাকাউন্ট লগইন' : 'নতুন অ্যাকাউন্ট তৈরি করুন')}
+                  </h2>
+                </div>
+              </div>
+              <button className="tv-round-btn" onClick={() => setShowAccountModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {currentUser ? (
+              <div className="account-profile-card">
+                <div className="account-profile-header">
+                  <div className="account-avatar-large">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: 0, color: '#fff', fontSize: '18px' }}>{currentUser.name}</h3>
+                    <div style={{ color: '#93c5fd', fontSize: '13px', marginTop: '2px' }}>{currentUser.identifier}</div>
+                    <div className="account-member-badge">
+                      <ShieldCheck size={13} /> Sazib TV Active Member
+                    </div>
+                  </div>
+                </div>
+
+                <div className="account-stats-grid">
+                  <div className="account-stat-box">
+                    <Heart size={18} color="#f43f5e" />
+                    <div>
+                      <b>{favorites.length}</b>
+                      <small>প্রিয় চ্যানেল</small>
+                    </div>
+                  </div>
+                  <div className="account-stat-box">
+                    <Tv size={18} color="#38bdf8" />
+                    <div>
+                      <b>{channels.length}</b>
+                      <small>মোট চ্যানেল</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
+                  <button
+                    className="tv-btn secondary"
+                    style={{ flex: 1, justifyContent: 'center', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.35)' }}
+                    onClick={handleAccountLogout}
+                  >
+                    <LogOut size={16} /> সাইন আউট (Logout)
+                  </button>
+                  <button
+                    className="tv-btn primary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => setShowAccountModal(false)}
+                  >
+                    ঠিক আছে
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {/* Login / Sign Up Tab Switcher */}
+                <div className="auth-tabs">
+                  <button
+                    type="button"
+                    className={`auth-tab-btn ${authTab === 'login' ? 'active' : ''}`}
+                    onClick={() => { setAuthTab('login'); setAuthError(''); }}
+                  >
+                    <LogIn size={15} /> লগইন (Login)
+                  </button>
+                  <button
+                    type="button"
+                    className={`auth-tab-btn ${authTab === 'signup' ? 'active' : ''}`}
+                    onClick={() => { setAuthTab('signup'); setAuthError(''); }}
+                  >
+                    <UserPlus size={15} /> সাইন আপ (Sign Up)
+                  </button>
+                </div>
+
+                {authError && (
+                  <div className="auth-error-banner">
+                    ⚠️ {authError}
+                  </div>
+                )}
+
+                <form
+                  onSubmit={authTab === 'login' ? handleAccountLogin : handleAccountSignup}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}
+                >
+                  {authTab === 'signup' && (
+                    <div className="auth-input-group">
+                      <label>আপনার পূর্ণ নাম (Full Name)</label>
+                      <div className="auth-input-wrap">
+                        <User size={16} className="auth-input-icon" />
+                        <input
+                          type="text"
+                          placeholder="যেমন: Sazib Khan"
+                          value={authName}
+                          onChange={e => setAuthName(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="auth-input-group">
+                    <label>ইমেইল বা মোবাইল নম্বর (Email / Phone)</label>
+                    <div className="auth-input-wrap">
+                      <Mail size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        placeholder="example@gmail.com বা 01XXXXXXXXX"
+                        value={authIdentifier}
+                        onChange={e => setAuthIdentifier(e.target.value)}
+                        autoFocus={authTab === 'login'}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>পাসওয়ার্ড (Password)</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type="password"
+                        placeholder="কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড"
+                        value={authPassword}
+                        onChange={e => setAuthPassword(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="tv-btn primary"
+                    style={{ width: '100%', height: '44px', justifyContent: 'center', marginTop: '6px', fontSize: '14px', fontWeight: 700 }}
+                  >
+                    {authTab === 'login' ? '✓ লগইন করুন (Sign In)' : '✓ অ্যাকাউন্ট তৈরি করুন (Sign Up)'}
+                  </button>
+                </form>
+
+                <div className="auth-divider">
+                  <span>অথবা</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="tv-btn secondary"
+                  style={{ width: '100%', height: '42px', justifyContent: 'center', gap: '10px' }}
+                  onClick={() => {
+                    setShowAccountModal(false);
+                    setShowGoogleModal(true);
+                  }}
+                >
+                  <GoogleGIcon size={18} />
+                  <span>Google অ্যাকাউন্ট দিয়ে কানেক্ট করুন</span>
+                </button>
               </div>
             )}
           </div>

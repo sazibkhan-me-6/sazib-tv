@@ -1131,11 +1131,11 @@ export default function App() {
       accounts.push(newAcc);
       localStorage.setItem('sazib_tv_accounts_v2', JSON.stringify(accounts));
 
-      // Dispatch Activation Code to Email & Phone via Vercel Serverless API
+      // Register customer in unified /api/customers endpoint & dispatch Email/SMS
       let emailDispatched = false;
       let smsDispatched = false;
       try {
-        const res = await fetch('/api/send-activation', {
+        const res = await fetch('/api/customers', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: newAcc.id, name, email, phone, address, nid, activationCode })

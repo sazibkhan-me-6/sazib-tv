@@ -578,7 +578,9 @@ const getUltraHlsConfig = () => ({
   }
 });
 
-const CHANNELS_VERSION = 'sazib-tv-v5';
+const CHANNELS_VERSION = 'sazib-tv-v6';
+const ADMIN_CONTROL_URL = 'https://sazib-tv-admin.vercel.app/site-control.json';
+const ADMIN_CHANNELS_URL = 'https://sazib-tv-admin.vercel.app/channels.json';
 
 export type DeviceMode = 'auto' | 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'tv';
 export type ActiveDeviceType = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'tv';
@@ -739,6 +741,74 @@ export default function App() {
     } catch {}
     return DEFAULT_CHANNELS;
   });
+
+  // Live Admin Control Panel Sync (https://sazib-tv-admin.vercel.app/)
+  const [adminControl, setAdminControl] = useState<{
+    maintenanceMode: boolean;
+    maintenanceMessage: string;
+    masterStreaming: boolean;
+    announcementEnabled: boolean;
+    announcementText: string;
+    supportContact: string;
+  }>({
+    maintenanceMode: false,
+    maintenanceMessage: 'Sazib TV is under scheduled maintenance. We will be back shortly!',
+    masterStreaming: true,
+    announcementEnabled: false,
+    announcementText: '',
+    supportContact: ''
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const syncFromAdminPanel = async () => {
+      const ts = Date.now();
+      try {
+        const ctrlRes = await fetch(`${ADMIN_CONTROL_URL}?t=${ts}`, { cache: 'no-store' });
+        if (ctrlRes.ok && !cancelled) {
+          const ctrlData = await ctrlRes.json();
+          if (ctrlData && typeof ctrlData === 'object') {
+            setAdminControl(prev => ({ ...prev, ...ctrlData }));
+          }
+        }
+      } catch {
+        // offline fallback
+      }
+      try {
+        const chRes = await fetch(`${ADMIN_CHANNELS_URL}?t=${ts}`, { cache: 'no-store' });
+        if (chRes.ok && !cancelled) {
+          const chData = await chRes.json();
+          if (Array.isArray(chData) && chData.length > 0) {
+            const activeOnly: Channel[] = chData
+              .filter((c: any) => c && c.active !== false && c.url)
+              .map((c: any, idx: number) => ({
+                id: c.id || `admin-ch-${idx}`,
+                name: c.name || 'Unnamed Channel',
+                url: c.url,
+                group: c.group || c.category || 'General',
+                logo: c.logo || '',
+                ...(c.webUrl ? { webUrl: c.webUrl } : {})
+              }));
+            if (activeOnly.length > 0) {
+              setChannels(activeOnly);
+              try {
+                localStorage.setItem('sb-channels-version', CHANNELS_VERSION);
+                localStorage.setItem('sb-channels', JSON.stringify(activeOnly));
+              } catch {}
+            }
+          }
+        }
+      } catch {
+        // offline fallback
+      }
+    };
+    syncFromAdminPanel();
+    const interval = setInterval(syncFromAdminPanel, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -2454,8 +2524,74 @@ export default function App() {
     }
   }, [channels, active, togglePlayPause, nextChannel, prevChannel, toggleTheater, toggleFullscreen, toggleMute, volumeUp, volumeDown, navigateSpatial, activateSpatial, backSpatial, homeSpatial, showOsd]);
 
+  if (adminControl.maintenanceMode) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle at top, #1e293b, #090d16 70%)',
+        color: '#f8fafc',
+        display: 'grid',
+        placeItems: 'center',
+        padding: '24px',
+        textAlign: 'center',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        <div style={{
+          maxWidth: '500px',
+          background: 'rgba(15, 23, 42, 0.92)',
+          border: '1px solid #334155',
+          borderRadius: '20px',
+          padding: '40px 32px',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.6)'
+        }}>
+          <img src={sazibTvLogo} alt="Sazib TV" style={{ height: '56px', marginBottom: '16px', objectFit: 'contain' }} />
+          <h1 style={{ margin: '0 0 10px', fontSize: '24px', color: '#fff' }}>🛠️ Under Maintenance</h1>
+          <p style={{ margin: '0 0 18px', fontSize: '15px', color: '#94a3b8', lineHeight: 1.6 }}>
+            {adminControl.maintenanceMessage || 'Sazib TV is under scheduled maintenance. We will be back shortly!'}
+          </p>
+          {adminControl.supportContact && (
+            <div style={{ color: '#60a5fa', fontSize: '14px', fontWeight: 600 }}>
+              {adminControl.supportContact}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`sazib-tv-leanback device-${device.activeDevice}`}>
+      {/* LIVE ADMIN ANNOUNCEMENT BANNER (Controlled by https://sazib-tv-admin.vercel.app/) */}
+      {adminControl.announcementEnabled && adminControl.announcementText && (
+        <div style={{
+          background: 'linear-gradient(90deg, #b91c1c, #e50914)',
+          color: '#ffffff',
+          padding: '8px 18px',
+          textAlign: 'center',
+          fontSize: '13px',
+          fontWeight: 600,
+          letterSpacing: '0.2px',
+          zIndex: 1000
+        }}>
+          📢 {adminControl.announcementText}
+        </div>
+      )}
+
+      {/* MASTER STREAMING PAUSED NOTICE (Controlled by Admin Panel) */}
+      {adminControl.masterStreaming === false && (
+        <div style={{
+          background: '#7c2d12',
+          color: '#fed7aa',
+          padding: '10px 18px',
+          textAlign: 'center',
+          fontSize: '13px',
+          fontWeight: 600,
+          borderBottom: '1px solid #9a3412'
+        }}>
+          ⏸️ Live streaming is temporarily paused by Sazib TV Admin. {adminControl.supportContact || ''}
+        </div>
+      )}
+
       {/* SINGER / TV FRAME ANDROID TOP BAR */}
       <header className="leanback-topbar">
         <div className="topbar-left">

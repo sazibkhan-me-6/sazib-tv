@@ -2879,12 +2879,7 @@ export default function App() {
               )}
               <div>
                 <b>{active.name}</b>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  <span className="tv-badge-pill">{active.group || 'Live TV'}</span>
-                  <span className="zero-buffer-badge" title="১ কোটি ইউজার হাই-ক্যাপাসিটি জিরো-বাফারিং ইঞ্জিন সক্রিয়">
-                    ⚡ Zero-Buffer • 10M+
-                  </span>
-                </div>
+                <span className="tv-badge-pill">{active.group || 'Live TV'}</span>
               </div>
             </div>
 

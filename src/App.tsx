@@ -116,7 +116,7 @@ const ALL_STORE_APPS: StoreCatalogApp[] = [
     bgColor: '#1d132b',
     textColor: '#f43f5e',
     url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
-    webUrl: 'https://toffeebd.com',
+    webUrl: 'https://toffeelive.com',
     description: 'সরাসরি লাইভ ক্রিকেট, ফুটবল এবং শত শত টিভি চ্যানেল ও নাটক ফ্রিতে উপভোগ করুন।',
     row: 'widgets'
   },
@@ -1084,8 +1084,48 @@ export default function App() {
   const [activeOtt, setActiveOtt] = useState<TVApp | null>(null);
   const [ottMode, setOttMode] = useState<'web' | 'stream'>('web');
   const [isOttIframeLoading, setIsOttIframeLoading] = useState(true);
+  const [ytEmbedUrl, setYtEmbedUrl] = useState('https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&rel=0');
+  const [ytInput, setYtInput] = useState('');
+  const [ottCustomLink, setOttCustomLink] = useState('');
   const ottVideoRef = useRef<HTMLVideoElement>(null);
   const ottHlsRef = useRef<Hls | null>(null);
+
+  const extractYoutubeEmbed = useCallback((input: string): string | null => {
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+      return `https://www.youtube.com/embed/${trimmed}?autoplay=1&rel=0`;
+    }
+    try {
+      const u = new URL(trimmed.startsWith('http') ? trimmed : 'https://' + trimmed);
+      if (u.hostname.includes('youtu.be')) {
+        const id = u.pathname.replace('/', '').split('/')[0];
+        if (id) return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+      if (u.hostname.includes('youtube.com')) {
+        const v = u.searchParams.get('v');
+        if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&rel=0`;
+        const parts = u.pathname.split('/').filter(Boolean);
+        if ((parts[0] === 'shorts' || parts[0] === 'live' || parts[0] === 'embed') && parts[1]) {
+          return `https://www.youtube.com/embed/${parts[1]}?autoplay=1&rel=0`;
+        }
+        const list = u.searchParams.get('list');
+        if (list) return `https://www.youtube.com/embed/videoseries?list=${list}&autoplay=1`;
+      }
+    } catch {}
+    return null;
+  }, []);
+
+  const launchOttExternal = useCallback((url: string, title?: string) => {
+    if (!url) return;
+    if (window.sazibApi?.openOttWindow) {
+      window.sazibApi.openOttWindow({ url, title: title || 'OTT Player' });
+      showOsd(`📺 ${title || 'OTT'} ওপেন হয়েছে`, 'আলাদা ফুল-ফিচারড উইন্ডোতে চালু হয়েছে');
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      showOsd(`🚀 ${title || 'OTT'} চালু হয়েছে`, 'অফিসিয়াল প্ল্যাটফর্মে লগইন করে দেখুন');
+    }
+  }, [showOsd]);
 
   const openOttApp = useCallback((app: TVApp, preferredMode: 'web' | 'stream' = 'web') => {
     if (app.id === 'app-playstore') {
@@ -1096,18 +1136,24 @@ export default function App() {
       setShowMobileConnect(true);
       return;
     }
+    if (app.id === 'app-player' && channels.length > 0) {
+      setActive(channels[0]);
+      showOsd('🎬 Sazib 4K Player', channels[0].name, channels[0].logo);
+      return;
+    }
     if (videoRef.current) {
       videoRef.current.pause();
     }
     setActive(null);
     setActiveOtt(app);
     setOttMode(preferredMode);
+    setOttCustomLink('');
     setIsOttIframeLoading(true);
     setTimeout(() => {
       setIsOttIframeLoading(false);
-    }, 2200);
+    }, 1800);
     showOsd(app.name, app.subtitle || 'OTT Platform', app.logo);
-  }, [showOsd]);
+  }, [showOsd, channels]);
 
   // Auto-dismiss OTT loading pill on webview events or timer
   useEffect(() => {
@@ -3207,37 +3253,193 @@ export default function App() {
           <div className="tv-ott-body">
             {ottMode === 'web' ? (
               <div className="tv-ott-web-container">
-                {isOttIframeLoading && (
-                  <div
-                    className="tv-ott-loading-pill"
-                    onClick={() => setIsOttIframeLoading(false)}
-                    style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-                    title="ক্লিক করে বন্ধ করুন"
-                  >
-                    <div className="loading-spinner"></div>
-                    <span>{activeOtt.name} ওপেন হচ্ছে...</span>
-                  </div>
-                )}
                 {typeof window !== 'undefined' && (window.sazibApi || navigator.userAgent.includes('Electron')) ? (
-                  <webview
-                    id="ott-browser-webview"
-                    src={activeOtt.webUrl}
-                    partition="persist:sazib_tv_ott"
-                    allowpopups={true}
-                    webpreferences="contextIsolation=false, nodeIntegration=false, webSecurity=false"
-                    className="tv-ott-iframe"
-                    onLoad={() => setIsOttIframeLoading(false)}
-                  ></webview>
+                  <>
+                    {isOttIframeLoading && (
+                      <div
+                        className="tv-ott-loading-pill"
+                        onClick={() => setIsOttIframeLoading(false)}
+                        style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                        title="ক্লিক করে বন্ধ করুন"
+                      >
+                        <div className="loading-spinner"></div>
+                        <span>{activeOtt.name} ওপেন হচ্ছে...</span>
+                      </div>
+                    )}
+                    <webview
+                      id="ott-browser-webview"
+                      src={activeOtt.webUrl}
+                      partition="persist:sazib_tv_ott"
+                      useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+                      allowpopups={true}
+                      webpreferences="contextIsolation=false, nodeIntegration=false, webSecurity=false"
+                      className="tv-ott-iframe"
+                      onLoad={() => setIsOttIframeLoading(false)}
+                    ></webview>
+                  </>
+                ) : (activeOtt.id === 'app-youtube' || activeOtt.id === 'app-ytmusic') ? (
+                  /* 100% WORKING IN-APP YOUTUBE PLAYER FOR WEB BROWSERS */
+                  <div className="ott-web-yt-studio">
+                    <form
+                      className="ott-yt-toolbar"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const embed = extractYoutubeEmbed(ytInput);
+                        if (embed) {
+                          setYtEmbedUrl(embed);
+                          showOsd('▶️ YouTube চালু হয়েছে', 'ভিডিও প্লে হচ্ছে');
+                        } else if (ytInput.trim()) {
+                          launchOttExternal(`https://www.youtube.com/results?search_query=${encodeURIComponent(ytInput.trim())}`, 'YouTube Search');
+                        }
+                      }}
+                    >
+                      <div className="ott-yt-search-wrap">
+                        <Search size={16} color="#94a3b8" />
+                        <input
+                          type="text"
+                          placeholder="যেকোনো YouTube ভিডিওর লিংক দিন বা সার্চ করুন..."
+                          value={ytInput}
+                          onChange={(e) => setYtInput(e.target.value)}
+                        />
+                      </div>
+                      <button type="submit" className="tv-btn primary" style={{ height: '38px', padding: '0 16px' }}>
+                        <Play size={15} /> প্লে / সার্চ
+                      </button>
+                      <button
+                        type="button"
+                        className="tv-btn secondary"
+                        style={{ height: '38px', padding: '0 14px' }}
+                        onClick={() => launchOttExternal(activeOtt.webUrl || 'https://www.youtube.com', activeOtt.name)}
+                      >
+                        <ExternalLink size={15} /> ফুল {activeOtt.name} খুলুন
+                      </button>
+                    </form>
+
+                    <div className="ott-yt-quick-chips">
+                      <button onClick={() => setYtEmbedUrl('https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&rel=0')}>🎵 Live Music 24/7</button>
+                      <button onClick={() => setYtEmbedUrl('https://www.youtube.com/embed/live_stream?channel=UCxHoBXkY88Tb8z1Ssj6CWsQ&autoplay=1')}>📺 Somoy TV Live</button>
+                      <button onClick={() => setYtEmbedUrl('https://www.youtube.com/embed/live_stream?channel=UCN6sm8iHiPd0cnoUardDAnw&autoplay=1')}>📰 Jamuna TV Live</button>
+                      <button onClick={() => launchOttExternal('https://www.youtube.com/results?search_query=Bangla+New+Natok+2026', 'Bangla Natok')}>🎬 বাংলা নাটক</button>
+                      <button onClick={() => launchOttExternal('https://www.youtube.com/results?search_query=Live+Cricket+Highlights', 'Cricket Highlights')}>🏏 ক্রিকেট হাইলাইটস</button>
+                    </div>
+
+                    <div className="ott-yt-frame-wrap">
+                      <iframe
+                        id="ott-browser-iframe"
+                        src={ytEmbedUrl}
+                        title={activeOtt.name}
+                        className="tv-ott-iframe"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
                 ) : (
-                  <iframe
-                    id="ott-browser-iframe"
-                    src={activeOtt.webUrl}
-                    title={activeOtt.name}
-                    className="tv-ott-iframe"
-                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture; microphone; camera"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    onLoad={() => setIsOttIframeLoading(false)}
-                  />
+                  /* CUSTOMER-READY OTT LAUNCH & STREAM HUB FOR WEB BROWSERS (NO BLOCKED IFRAME!) */
+                  <div className="ott-web-launcher-hub">
+                    <div
+                      className="ott-launcher-card"
+                      style={{ borderColor: activeOtt.textColor ? `${activeOtt.textColor}55` : 'rgba(59, 130, 246, 0.35)' }}
+                    >
+                      <div className="ott-launcher-hero">
+                        <div
+                          className="ott-launcher-icon"
+                          style={{
+                            background: activeOtt.bgColor || '#1e293b',
+                            color: activeOtt.textColor || '#ffffff',
+                            border: `1px solid ${activeOtt.textColor || '#38bdf8'}44`
+                          }}
+                        >
+                          {activeOtt.logo ? (
+                            <img src={activeOtt.logo} alt={activeOtt.name} onError={e => (e.currentTarget.style.display = 'none')} />
+                          ) : (
+                            <span style={{ fontSize: '26px', fontWeight: 900 }}>{activeOtt.name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <div className="ott-launcher-info">
+                          <div className="ott-verified-pill">
+                            <ShieldCheck size={13} /> অফিসিয়াল ওটিটি প্ল্যাটফর্ম • Full HD / 4K DRM
+                          </div>
+                          <h2>{activeOtt.name}</h2>
+                          <p>{activeOtt.description || activeOtt.subtitle || 'আপনার প্রিয় সিনেমা, নাটক, ওয়েব সিরিজ এবং লাইভ স্পোর্টস উপভোগ করুন।'}</p>
+                        </div>
+                      </div>
+
+                      <div className="ott-launcher-actions">
+                        {activeOtt.webUrl && (
+                          <button
+                            className="ott-launch-primary-btn"
+                            onClick={() => launchOttExternal(activeOtt.webUrl || '', activeOtt.name)}
+                          >
+                            <ExternalLink size={20} />
+                            <span>🚀 {activeOtt.name} ওপেন ও ব্যবহার করুন</span>
+                          </button>
+                        )}
+                        {activeOtt.url && (
+                          <button
+                            className="ott-launch-stream-btn"
+                            onClick={() => setOttMode('stream')}
+                          >
+                            <Play size={19} />
+                            <span>📺 অ্যাপের ভেতরেই লাইভ দেখুন</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="ott-launcher-note">
+                        💡 নিরাপত্তা, নিজের অ্যাকাউন্টে লগইন এবং ফুল এইচডি/৪কে (DRM) ভিডিও প্লেব্যাকের জন্য <b>{activeOtt.name}</b> সরাসরি অফিসিয়াল অ্যাপ/উইন্ডোতে চালু হবে যাতে কোনো বাফারিং বা ব্লকিং ছাড়াই দেখতে পারেন।
+                      </div>
+
+                      {/* Direct Stream / Video Link Player inside OTT Hub */}
+                      <form
+                        className="ott-custom-play-box"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const link = ottCustomLink.trim();
+                          if (!link) return;
+                          const ytEmbed = extractYoutubeEmbed(link);
+                          if (ytEmbed) {
+                            setYtEmbedUrl(ytEmbed);
+                            const ytApp = ALL_STORE_APPS.find(a => a.id === 'app-youtube');
+                            if (ytApp) setActiveOtt(ytApp);
+                            return;
+                          }
+                          setActiveOtt({ ...activeOtt, url: link });
+                          setOttMode('stream');
+                          showOsd('▶️ কাস্টম স্ট্রিম চালু হয়েছে', activeOtt.name);
+                        }}
+                      >
+                        <input
+                          type="text"
+                          placeholder="অথবা যেকোনো সরাসরি স্ট্রিম (.m3u8 / .mp4) বা YouTube লিংক পেস্ট করে এখানেই দেখুন..."
+                          value={ottCustomLink}
+                          onChange={(e) => setOttCustomLink(e.target.value)}
+                        />
+                        <button type="submit" className="tv-btn primary" style={{ height: '40px', padding: '0 16px', whiteSpace: 'nowrap' }}>
+                          <Play size={15} /> প্লে করুন
+                        </button>
+                      </form>
+
+                      {/* Quick Switch Popular OTT Platforms */}
+                      <div className="ott-quick-switch-row">
+                        <span className="ott-quick-label">জনপ্রিয় ওটিটি:</span>
+                        {['app-netflix', 'app-chorki', 'app-toffee', 'app-hoichoi', 'app-youtube', 'app-prime', 'app-bongo', 'app-tsports'].map(id => {
+                          const targetApp = ALL_STORE_APPS.find(a => a.id === id);
+                          if (!targetApp) return null;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              className={`ott-quick-chip ${activeOtt.id === id ? 'active' : ''}`}
+                              onClick={() => openOttApp(targetApp, 'web')}
+                            >
+                              {targetApp.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (

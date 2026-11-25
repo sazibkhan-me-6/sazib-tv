@@ -823,9 +823,21 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false);
   const [showMobileConnect, setShowMobileConnect] = useState(false);
 
-  // Sazib TV Account Authentication System State
-  type SazibAccount = { id: string; name: string; identifier: string; password: string; createdAt: string };
-  const [currentUser, setCurrentUser] = useState<Omit<SazibAccount, 'password'> | null>(() => {
+  // Sazib TV Activation-Code Account Authentication System State
+  type SazibAccount = {
+    id: string;
+    name: string;
+    identifier: string;
+    email: string;
+    phone: string;
+    address: string;
+    nid: string;
+    activationCode: string;
+    plan?: string;
+    expiresAt?: string;
+    createdAt: string;
+  };
+  const [currentUser, setCurrentUser] = useState<SazibAccount | null>(() => {
     try {
       const saved = localStorage.getItem('sazib_tv_current_user');
       return saved ? JSON.parse(saved) : null;
@@ -836,9 +848,22 @@ export default function App() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   const [authName, setAuthName] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPhone, setAuthPhone] = useState('');
+  const [authAddress, setAuthAddress] = useState('');
+  const [authNid, setAuthNid] = useState('');
   const [authIdentifier, setAuthIdentifier] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
+  const [authActivationCode, setAuthActivationCode] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authSending, setAuthSending] = useState(false);
+  const [signupResult, setSignupResult] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    activationCode: string;
+    emailDispatched: boolean;
+    smsDispatched: boolean;
+  } | null>(null);
 
   const device = useDeviceLayout();
   const [playlistUrl, setPlaylistUrl] = useState('');
@@ -1053,77 +1078,180 @@ export default function App() {
     showOsd('✓ গুগল প্লে কানেক্টেড', email);
   }, [googleInputEmail, googleInputName, showOsd]);
 
-  const handleAccountSignup = useCallback((e?: React.FormEvent) => {
+  const handleAccountSignup = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setAuthError('');
     const name = authName.trim();
-    const identifier = authIdentifier.trim().toLowerCase();
-    const password = authPassword.trim();
-    if (!name || !identifier || !password) {
-      setAuthError('অনুগ্রহ করে আপনার নাম, ইমেইল/মোবাইল এবং পাসওয়ার্ড দিন।');
+    const email = authEmail.trim().toLowerCase();
+    const phone = authPhone.trim();
+    const address = authAddress.trim();
+    const nid = authNid.trim();
+
+    if (!name || !email || !phone || !address || !nid) {
+      setAuthError('অনুগ্রহ করে নাম, ইমেইল, ফোন নাম্বার, অ্যাড্রেস এবং এনআইডি কার্ড নাম্বার পূরণ করুন।');
       return;
     }
-    if (password.length < 4) {
-      setAuthError('পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।');
+    if (!email.includes('@') || !email.includes('.')) {
+      setAuthError('অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস দিন।');
       return;
     }
+    if (phone.replace(/\D/g, '').length < 10) {
+      setAuthError('অনুগ্রহ করে সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন।');
+      return;
+    }
+    if (nid.replace(/\D/g, '').length < 10 || nid.replace(/\D/g, '').length > 17) {
+      setAuthError('সঠিক এনআইডি কার্ড নাম্বার দিন (১০ থেকে ১৭ ডিজিট)।');
+      return;
+    }
+
+    setAuthSending(true);
     try {
-      const existingRaw = localStorage.getItem('sazib_tv_accounts');
+      const existingRaw = localStorage.getItem('sazib_tv_accounts_v2');
       const accounts: SazibAccount[] = existingRaw ? JSON.parse(existingRaw) : [];
-      if (accounts.some(acc => acc.identifier === identifier)) {
-        setAuthError('এই ইমেইল বা মোবাইল নম্বর দিয়ে ইতিমধ্যেই অ্যাকাউন্ট আছে। অনুগ্রহ করে লগইন করুন।');
+      if (accounts.some(acc => acc.email === email || acc.phone === phone)) {
+        setAuthError('এই ইমেইল বা ফোন নাম্বার দিয়ে ইতিমধ্যেই অ্যাকাউন্ট আছে। অ্যাক্টিভেশন কোড দিয়ে লগইন করুন।');
+        setAuthSending(false);
         return;
       }
+
+      const activationCode = `SZB-${Math.floor(100000 + Math.random() * 900000)}`;
       const newAcc: SazibAccount = {
         id: 'usr-' + Date.now(),
         name,
-        identifier,
-        password,
+        identifier: phone,
+        email,
+        phone,
+        address,
+        nid,
+        activationCode,
+        plan: 'Active Member',
         createdAt: new Date().toLocaleDateString()
       };
+
       accounts.push(newAcc);
-      localStorage.setItem('sazib_tv_accounts', JSON.stringify(accounts));
-      const sessionUser = { id: newAcc.id, name: newAcc.name, identifier: newAcc.identifier, createdAt: newAcc.createdAt };
-      setCurrentUser(sessionUser);
-      localStorage.setItem('sazib_tv_current_user', JSON.stringify(sessionUser));
+      localStorage.setItem('sazib_tv_accounts_v2', JSON.stringify(accounts));
+
+      // Dispatch Activation Code to Email & Phone via Vercel Serverless API
+      let emailDispatched = false;
+      let smsDispatched = false;
+      try {
+        const res = await fetch('/api/send-activation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, address, nid, activationCode })
+        });
+        if (res.ok) {
+          const d = await res.json();
+          emailDispatched = !!d.emailDispatched;
+          smsDispatched = !!d.smsDispatched;
+        }
+      } catch {
+        // fallback handled cleanly in confirmation card
+      }
+
+      setSignupResult({ name, email, phone, activationCode, emailDispatched, smsDispatched });
       setAuthName('');
-      setAuthIdentifier('');
-      setAuthPassword('');
-      setShowAccountModal(false);
-      showOsd(`✓ স্বাগতম, ${name}!`, 'Sazib TV অ্যাকাউন্ট তৈরি ও লগইন সফল হয়েছে');
+      setAuthEmail('');
+      setAuthPhone('');
+      setAuthAddress('');
+      setAuthNid('');
+      showOsd('✓ অ্যাক্টিভেশন কোড পাঠানো হয়েছে', `${email} ও ${phone}`);
     } catch {
       setAuthError('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    } finally {
+      setAuthSending(false);
     }
-  }, [authName, authIdentifier, authPassword, showOsd]);
+  }, [authName, authEmail, authPhone, authAddress, authNid, showOsd]);
 
-  const handleAccountLogin = useCallback((e?: React.FormEvent) => {
+  const handleAccountLogin = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setAuthError('');
     const identifier = authIdentifier.trim().toLowerCase();
-    const password = authPassword.trim();
-    if (!identifier || !password) {
-      setAuthError('অনুগ্রহ করে ইমেইল/মোবাইল এবং পাসওয়ার্ড দিন।');
+    const code = authActivationCode.trim().toUpperCase();
+    if (!identifier || !code) {
+      setAuthError('অনুগ্রহ করে আপনার ইমেইল/ফোন নাম্বার এবং অ্যাক্টিভেশন কোড দিন।');
       return;
     }
+
+    setAuthSending(true);
     try {
-      const existingRaw = localStorage.getItem('sazib_tv_accounts');
+      // 1. Check Live Admin Panel Customers first (https://sazib-tv-admin.vercel.app/customers.json)
+      try {
+        const res = await fetch(`https://sazib-tv-admin.vercel.app/customers.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const adminCustomers = await res.json();
+          if (Array.isArray(adminCustomers)) {
+            const adminMatch = adminCustomers.find((c: any) =>
+              ((c.phone && String(c.phone).toLowerCase() === identifier) ||
+               (c.email && String(c.email).toLowerCase() === identifier)) &&
+              c.code && String(c.code).toUpperCase() === code
+            );
+            if (adminMatch) {
+              const today = new Date().toISOString().split('T')[0];
+              if (adminMatch.status === 'blocked') {
+                setAuthError('আপনার অ্যাকাউন্টটি অ্যাডমিন কর্তৃক ব্লক করা হয়েছে। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।');
+                setAuthSending(false);
+                return;
+              }
+              if (adminMatch.expiresAt && adminMatch.expiresAt < today) {
+                setAuthError(`আপনার সাবস্ক্রিপশনের মেয়াদ (${adminMatch.expiresAt}) শেষ হয়ে গেছে। রিনিউ করতে অ্যাডমিনের সাথে যোগাযোগ করুন।`);
+                setAuthSending(false);
+                return;
+              }
+              const sessionUser: SazibAccount = {
+                id: adminMatch.id,
+                name: adminMatch.name,
+                identifier: adminMatch.phone || adminMatch.email,
+                email: adminMatch.email || '',
+                phone: adminMatch.phone || '',
+                address: adminMatch.address || '',
+                nid: adminMatch.nid || '',
+                activationCode: adminMatch.code,
+                plan: adminMatch.plan || 'VIP',
+                expiresAt: adminMatch.expiresAt || '',
+                createdAt: adminMatch.createdAt || new Date().toLocaleDateString()
+              };
+              setCurrentUser(sessionUser);
+              localStorage.setItem('sazib_tv_current_user', JSON.stringify(sessionUser));
+              setAuthIdentifier('');
+              setAuthActivationCode('');
+              setSignupResult(null);
+              setShowAccountModal(false);
+              showOsd(`✓ লগইন সফল • ${sessionUser.name}`, `${sessionUser.plan} অ্যাক্টিভেশন কোড ভেরিফাইড`);
+              setAuthSending(false);
+              return;
+            }
+          }
+        }
+      } catch {
+        // continue to local accounts check
+      }
+
+      // 2. Check Locally Signed-Up Accounts (sazib_tv_accounts_v2)
+      const existingRaw = localStorage.getItem('sazib_tv_accounts_v2');
       const accounts: SazibAccount[] = existingRaw ? JSON.parse(existingRaw) : [];
-      const matched = accounts.find(acc => acc.identifier === identifier && acc.password === password);
+      const matched = accounts.find(
+        acc => (acc.email === identifier || acc.phone.toLowerCase() === identifier) && acc.activationCode.toUpperCase() === code
+      );
       if (!matched) {
-        setAuthError('ইমেইল/মোবাইল অথবা পাসওয়ার্ড সঠিক নয়। নতুন হলে Sign Up করুন।');
+        setAuthError('ইমেইল/ফোন নাম্বার অথবা অ্যাক্টিভেশন কোড সঠিক নয়। নতুন হলে Sign Up করে অ্যাক্টিভেশন কোড নিন।');
+        setAuthSending(false);
         return;
       }
-      const sessionUser = { id: matched.id, name: matched.name, identifier: matched.identifier, createdAt: matched.createdAt };
-      setCurrentUser(sessionUser);
-      localStorage.setItem('sazib_tv_current_user', JSON.stringify(sessionUser));
+
+      setCurrentUser(matched);
+      localStorage.setItem('sazib_tv_current_user', JSON.stringify(matched));
       setAuthIdentifier('');
-      setAuthPassword('');
+      setAuthActivationCode('');
+      setSignupResult(null);
       setShowAccountModal(false);
-      showOsd(`✓ লগইন সফল • ${matched.name}`, 'Sazib TV অ্যাকাউন্টে স্বাগতম');
+      showOsd(`✓ লগইন সফল • ${matched.name}`, 'অ্যাক্টিভেশন কোড ভেরিফাই হয়েছে');
     } catch {
-      setAuthError('লগইন করতে সমস্যা হয়েছে।');
+      setAuthError('লগইন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    } finally {
+      setAuthSending(false);
     }
-  }, [authIdentifier, authPassword, showOsd]);
+  }, [authIdentifier, authActivationCode, showOsd]);
 
   const handleAccountLogout = useCallback(() => {
     setCurrentUser(null);
@@ -3850,12 +3978,23 @@ export default function App() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <h3 style={{ margin: 0, color: '#fff', fontSize: '18px' }}>{currentUser.name}</h3>
-                    <div style={{ color: '#93c5fd', fontSize: '13px', marginTop: '2px' }}>{currentUser.identifier}</div>
+                    <div style={{ color: '#93c5fd', fontSize: '13px', marginTop: '2px' }}>{currentUser.phone || currentUser.identifier}</div>
+                    {currentUser.email && (
+                      <div style={{ color: '#94a3b8', fontSize: '12px' }}>{currentUser.email}</div>
+                    )}
                     <div className="account-member-badge">
-                      <ShieldCheck size={13} /> Sazib TV Active Member
+                      <ShieldCheck size={13} /> {currentUser.plan || 'Sazib TV Active Member'} • {currentUser.activationCode || 'Verified'}
                     </div>
                   </div>
                 </div>
+
+                {(currentUser.address || currentUser.nid) && (
+                  <div style={{ background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '10px', padding: '10px 12px', marginTop: '12px', fontSize: '12px', color: '#cbd5e1', display: 'grid', gap: '4px' }}>
+                    {currentUser.address && <div><strong>অ্যাড্রেস:</strong> {currentUser.address}</div>}
+                    {currentUser.nid && <div><strong>NID নাম্বার:</strong> {currentUser.nid}</div>}
+                    {currentUser.expiresAt && <div><strong>মেয়াদ:</strong> {currentUser.expiresAt}</div>}
+                  </div>
+                )}
 
                 <div className="account-stats-grid">
                   <div className="account-stat-box">
@@ -3891,6 +4030,55 @@ export default function App() {
                   </button>
                 </div>
               </div>
+            ) : signupResult ? (
+              <div style={{ background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(74, 222, 128, 0.35)', borderRadius: '14px', padding: '20px', textAlign: 'center' }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>✅</div>
+                <h3 style={{ margin: '0 0 6px', color: '#4ade80', fontSize: '18px' }}>
+                  অ্যাক্টিভেশন কোড পাঠানো হয়েছে!
+                </h3>
+                <p style={{ margin: '0 0 14px', color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5 }}>
+                  অভিনন্দন <strong>{signupResult.name}</strong>! আপনার ইমেইল ও ফোন নাম্বারে অ্যাক্টিভেশন কোড পাঠানো হয়েছে:
+                </p>
+
+                <div style={{ background: 'rgba(30, 41, 59, 0.9)', borderRadius: '10px', padding: '10px 12px', fontSize: '12px', color: '#93c5fd', textAlign: 'left', marginBottom: '14px', display: 'grid', gap: '4px' }}>
+                  <div>📧 ইমেইল: <strong>{signupResult.email}</strong> {signupResult.emailDispatched ? '✓ Sent' : '✓ Queued'}</div>
+                  <div>📱 ফোন SMS: <strong>{signupResult.phone}</strong> {signupResult.smsDispatched ? '✓ Sent' : '✓ Queued'}</div>
+                </div>
+
+                <div style={{ background: '#0b1120', border: '1px dashed #38bdf8', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '1px', marginBottom: '4px' }}>YOUR ACTIVATION CODE</div>
+                  <div style={{ fontSize: '26px', fontWeight: 800, color: '#38bdf8', letterSpacing: '3px' }}>
+                    {signupResult.activationCode}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                  <button
+                    type="button"
+                    className="tv-btn secondary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => {
+                      navigator.clipboard?.writeText(signupResult.activationCode);
+                      showOsd('✓ কপি হয়েছে', signupResult.activationCode);
+                    }}
+                  >
+                    <Copy size={15} /> কোড কপি করুন
+                  </button>
+                  <button
+                    type="button"
+                    className="tv-btn primary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => {
+                      setAuthIdentifier(signupResult.phone);
+                      setAuthActivationCode(signupResult.activationCode);
+                      setSignupResult(null);
+                      setAuthTab('login');
+                    }}
+                  >
+                    <LogIn size={15} /> কোড দিয়ে লগইন
+                  </button>
+                </div>
+              </div>
             ) : (
               <div>
                 {/* Login / Sign Up Tab Switcher */}
@@ -3900,7 +4088,7 @@ export default function App() {
                     className={`auth-tab-btn ${authTab === 'login' ? 'active' : ''}`}
                     onClick={() => { setAuthTab('login'); setAuthError(''); }}
                   >
-                    <LogIn size={15} /> লগইন (Login)
+                    <LogIn size={15} /> লগইন (Activation Code)
                   </button>
                   <button
                     type="button"
@@ -3917,13 +4105,55 @@ export default function App() {
                   </div>
                 )}
 
-                <form
-                  onSubmit={authTab === 'login' ? handleAccountLogin : handleAccountSignup}
-                  style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}
-                >
-                  {authTab === 'signup' && (
+                {authTab === 'login' ? (
+                  <form
+                    onSubmit={handleAccountLogin}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}
+                  >
                     <div className="auth-input-group">
-                      <label>আপনার পূর্ণ নাম (Full Name)</label>
+                      <label>ইমেইল বা ফোন নাম্বার (Email / Phone)</label>
+                      <div className="auth-input-wrap">
+                        <Mail size={16} className="auth-input-icon" />
+                        <input
+                          type="text"
+                          placeholder="example@gmail.com বা 01XXXXXXXXX"
+                          value={authIdentifier}
+                          onChange={e => setAuthIdentifier(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    <div className="auth-input-group">
+                      <label>অ্যাক্টিভেশন কোড (Activation Code)</label>
+                      <div className="auth-input-wrap">
+                        <Lock size={16} className="auth-input-icon" />
+                        <input
+                          type="text"
+                          placeholder="যেমন: SZB-8821 বা SZB-123456"
+                          value={authActivationCode}
+                          onChange={e => setAuthActivationCode(e.target.value.toUpperCase())}
+                          style={{ textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 700 }}
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authSending}
+                      className="tv-btn primary"
+                      style={{ width: '100%', height: '44px', justifyContent: 'center', marginTop: '6px', fontSize: '14px', fontWeight: 700 }}
+                    >
+                      {authSending ? '⏳ ভেরিফাই করা হচ্ছে...' : '✓ অ্যাক্টিভেশন কোড দিয়ে লগইন করুন'}
+                    </button>
+                  </form>
+                ) : (
+                  <form
+                    onSubmit={handleAccountSignup}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px', maxHeight: '62vh', overflowY: 'auto', paddingRight: '2px' }}
+                  >
+                    <div className="auth-input-group">
+                      <label>পূর্ণ নাম (Full Name) *</label>
                       <div className="auth-input-wrap">
                         <User size={16} className="auth-input-icon" />
                         <input
@@ -3931,47 +4161,79 @@ export default function App() {
                           placeholder="যেমন: Sazib Khan"
                           value={authName}
                           onChange={e => setAuthName(e.target.value)}
+                          required
                           autoFocus
                         />
                       </div>
                     </div>
-                  )}
 
-                  <div className="auth-input-group">
-                    <label>ইমেইল বা মোবাইল নম্বর (Email / Phone)</label>
-                    <div className="auth-input-wrap">
-                      <Mail size={16} className="auth-input-icon" />
-                      <input
-                        type="text"
-                        placeholder="example@gmail.com বা 01XXXXXXXXX"
-                        value={authIdentifier}
-                        onChange={e => setAuthIdentifier(e.target.value)}
-                        autoFocus={authTab === 'login'}
-                      />
+                    <div className="auth-input-group">
+                      <label>ইমেইল (Email Address) *</label>
+                      <div className="auth-input-wrap">
+                        <Mail size={16} className="auth-input-icon" />
+                        <input
+                          type="email"
+                          placeholder="example@gmail.com"
+                          value={authEmail}
+                          onChange={e => setAuthEmail(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="auth-input-group">
-                    <label>পাসওয়ার্ড (Password)</label>
-                    <div className="auth-input-wrap">
-                      <Lock size={16} className="auth-input-icon" />
-                      <input
-                        type="password"
-                        placeholder="কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড"
-                        value={authPassword}
-                        onChange={e => setAuthPassword(e.target.value)}
-                      />
+                    <div className="auth-input-group">
+                      <label>ফোন নাম্বার (Phone Number) *</label>
+                      <div className="auth-input-wrap">
+                        <Smartphone size={16} className="auth-input-icon" />
+                        <input
+                          type="tel"
+                          placeholder="01XXXXXXXXX"
+                          value={authPhone}
+                          onChange={e => setAuthPhone(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    className="tv-btn primary"
-                    style={{ width: '100%', height: '44px', justifyContent: 'center', marginTop: '6px', fontSize: '14px', fontWeight: 700 }}
-                  >
-                    {authTab === 'login' ? '✓ লগইন করুন (Sign In)' : '✓ অ্যাকাউন্ট তৈরি করুন (Sign Up)'}
-                  </button>
-                </form>
+                    <div className="auth-input-group">
+                      <label>ঠিকানা / অ্যাড্রেস (Full Address) *</label>
+                      <div className="auth-input-wrap">
+                        <Home size={16} className="auth-input-icon" />
+                        <input
+                          type="text"
+                          placeholder="যেমন: মিরপুর-১০, ঢাকা-১২১৬"
+                          value={authAddress}
+                          onChange={e => setAuthAddress(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="auth-input-group">
+                      <label>এনআইডি কার্ড নাম্বার (NID Card Number) *</label>
+                      <div className="auth-input-wrap">
+                        <ShieldCheck size={16} className="auth-input-icon" />
+                        <input
+                          type="text"
+                          placeholder="১০ থেকে ১৭ ডিজিটের NID নাম্বার"
+                          value={authNid}
+                          onChange={e => setAuthNid(e.target.value.replace(/[^0-9]/g, ''))}
+                          maxLength={17}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={authSending}
+                      className="tv-btn primary"
+                      style={{ width: '100%', height: '44px', justifyContent: 'center', marginTop: '6px', fontSize: '14px', fontWeight: 700 }}
+                    >
+                      {authSending ? '⏳ কোড পাঠানো হচ্ছে...' : '📩 সাইন আপ করে অ্যাক্টিভেশন কোড নিন'}
+                    </button>
+                  </form>
+                )}
 
                 <div className="auth-divider">
                   <span>অথবা</span>

@@ -3533,3 +3533,104 @@ button {
   }
 }
 
+/* ==================== MANDATORY FULL-SCREEN LOGIN GATE ==================== */
+.sazib-auth-gate {
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(circle at top, #172554 0%, #070b14 65%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sazib-auth-gate-card {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 22px;
+  padding: 28px 24px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.72), 0 0 40px rgba(37, 99, 235, 0.16);
+  backdrop-filter: blur(20px);
+}
+
+.sazib-auth-gate-brand {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.sazib-auth-gate-logo {
+  height: 52px;
+  object-fit: contain;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.sazib-auth-gate-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.sazib-auth-gate-brand h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.sazib-auth-gate-brand p {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.auth-gate-lang-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.auth-gate-lang-btn {
+  padding: 5px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-gate-lang-btn.active {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #34d399;
+  color: #4ade80;
+}
+
+@media (max-width: 640px) {
+  .sazib-auth-gate-card {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+  .sazib-auth-gate-logo {
+    height: 44px;
+  }
+}
+

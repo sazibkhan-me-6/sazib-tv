@@ -1789,6 +1789,12 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem('sazib_tv_current_user');
     setShowAccountModal(false);
+    setActive(null);
+    setActiveOtt(null);
+    setActiveCategoryRail(null);
+    setShowPlayStoreHub(false);
+    setShowAdd(false);
+    setShowMobileConnect(false);
     showOsd('লগআউট সম্পন্ন', 'আপনি সফলভাবে সাইন আউট করেছেন');
   }, [showOsd]);
 
@@ -3216,6 +3222,254 @@ export default function App() {
           {adminControl.supportContact && (
             <div style={{ color: '#60a5fa', fontSize: '14px', fontWeight: 600 }}>
               {adminControl.supportContact}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // MANDATORY LOGIN GATE: Nobody can use Sazib TV without logging in!
+  if (!currentUser) {
+    return (
+      <div className="sazib-auth-gate">
+        <div className="sazib-auth-gate-card">
+          <div className="sazib-auth-gate-brand">
+            <img src={sazibTvLogo} alt="Sazib TV" className="sazib-auth-gate-logo" />
+            <div className="sazib-auth-gate-badge">
+              <Lock size={13} /> SAZIB TV • MEMBER ACCESS ONLY
+            </div>
+            <h1>{authTab === 'login' ? t.accountLogin : t.createAccount}</h1>
+            <p>Sazib TV ব্যবহার করতে আপনার অ্যাকাউন্টে লগইন অথবা নতুন অ্যাকাউন্ট তৈরি করুন।</p>
+          </div>
+
+          {/* Quick Language Switcher on Login Gate */}
+          <div className="auth-gate-lang-row">
+            {APP_LANGUAGES.map(lang => (
+              <button
+                key={lang.code}
+                type="button"
+                className={`auth-gate-lang-btn ${appLanguage === lang.code ? 'active' : ''}`}
+                onClick={() => {
+                  setAppLanguage(lang.code);
+                  try { localStorage.setItem('sazib_tv_language', lang.code); } catch {}
+                }}
+              >
+                {lang.flag} {lang.native}
+              </button>
+            ))}
+          </div>
+
+          {signupResult ? (
+            <div style={{ background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(74, 222, 128, 0.35)', borderRadius: '14px', padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '36px', marginBottom: '8px' }}>✅</div>
+              <h3 style={{ margin: '0 0 6px', color: '#4ade80', fontSize: '18px' }}>
+                অ্যাক্টিভেশন কোড পাঠানো হয়েছে!
+              </h3>
+              <p style={{ margin: '0 0 14px', color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5 }}>
+                অভিনন্দন <strong>{signupResult.name}</strong>! আপনার ইমেইল ও ফোন নাম্বারে অ্যাক্টিভেশন কোড পাঠানো হয়েছে:
+              </p>
+
+              <div style={{ background: 'rgba(30, 41, 59, 0.9)', borderRadius: '10px', padding: '10px 12px', fontSize: '12px', color: '#93c5fd', textAlign: 'left', marginBottom: '14px', display: 'grid', gap: '4px' }}>
+                <div>📧 ইমেইল: <strong>{signupResult.email}</strong> {signupResult.emailDispatched ? '✓ Sent' : '✓ Queued'}</div>
+                <div>📱 ফোন SMS: <strong>{signupResult.phone}</strong> {signupResult.smsDispatched ? '✓ Sent' : '✓ Queued'}</div>
+              </div>
+
+              <div style={{ background: '#0b1120', border: '1px dashed #38bdf8', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', letterSpacing: '1px', marginBottom: '4px' }}>YOUR ACTIVATION CODE</div>
+                <div style={{ fontSize: '26px', fontWeight: 800, color: '#38bdf8', letterSpacing: '3px' }}>
+                  {signupResult.activationCode}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="tv-btn secondary"
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => {
+                    navigator.clipboard?.writeText(signupResult.activationCode);
+                    showOsd('✓ কপি হয়েছে', signupResult.activationCode);
+                  }}
+                >
+                  <Copy size={15} /> কোড কপি করুন
+                </button>
+                <button
+                  type="button"
+                  className="tv-btn primary"
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => {
+                    setAuthIdentifier(signupResult.phone);
+                    setAuthActivationCode(signupResult.activationCode);
+                    setSignupResult(null);
+                    setAuthTab('login');
+                  }}
+                >
+                  <LogIn size={15} /> কোড দিয়ে লগইন
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {/* Login / Sign Up Tab Switcher */}
+              <div className="auth-tabs">
+                <button
+                  type="button"
+                  className={`auth-tab-btn ${authTab === 'login' ? 'active' : ''}`}
+                  onClick={() => { setAuthTab('login'); setAuthError(''); }}
+                >
+                  <LogIn size={15} /> {t.login} (Activation Code)
+                </button>
+                <button
+                  type="button"
+                  className={`auth-tab-btn ${authTab === 'signup' ? 'active' : ''}`}
+                  onClick={() => { setAuthTab('signup'); setAuthError(''); }}
+                >
+                  <UserPlus size={15} /> Sign Up
+                </button>
+              </div>
+
+              {authError && (
+                <div className="auth-error-banner">
+                  ⚠️ {authError}
+                </div>
+              )}
+
+              {authTab === 'login' ? (
+                <form
+                  onSubmit={handleAccountLogin}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}
+                >
+                  <div className="auth-input-group">
+                    <label>ইমেইল বা ফোন নাম্বার (Email / Phone)</label>
+                    <div className="auth-input-wrap">
+                      <Mail size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        placeholder="example@gmail.com বা 01XXXXXXXXX"
+                        value={authIdentifier}
+                        onChange={e => setAuthIdentifier(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>অ্যাক্টিভেশন কোড (Activation Code)</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        placeholder="যেমন: SZB-8821 বা SZB-123456"
+                        value={authActivationCode}
+                        onChange={e => setAuthActivationCode(e.target.value.toUpperCase())}
+                        style={{ textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 700 }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={authSending}
+                    className="tv-btn primary"
+                    style={{ width: '100%', height: '46px', justifyContent: 'center', marginTop: '6px', fontSize: '14.5px', fontWeight: 700 }}
+                  >
+                    {authSending ? '⏳ ভেরিফাই করা হচ্ছে...' : `✓ ${t.login} করুন`}
+                  </button>
+                </form>
+              ) : (
+                <form
+                  onSubmit={handleAccountSignup}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px', maxHeight: '52vh', overflowY: 'auto', paddingRight: '2px' }}
+                >
+                  <div className="auth-input-group">
+                    <label>পূর্ণ নাম (Full Name) *</label>
+                    <div className="auth-input-wrap">
+                      <User size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        placeholder="যেমন: Sazib Khan"
+                        value={authName}
+                        onChange={e => setAuthName(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>ইমেইল (Email Address) *</label>
+                    <div className="auth-input-wrap">
+                      <Mail size={16} className="auth-input-icon" />
+                      <input
+                        type="email"
+                        placeholder="example@gmail.com"
+                        value={authEmail}
+                        onChange={e => setAuthEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>ফোন নাম্বার (Phone Number) *</label>
+                    <div className="auth-input-wrap">
+                      <Smartphone size={16} className="auth-input-icon" />
+                      <input
+                        type="tel"
+                        placeholder="01XXXXXXXXX"
+                        value={authPhone}
+                        onChange={e => setAuthPhone(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>ঠিকানা / অ্যাড্রেস (Full Address) *</label>
+                    <div className="auth-input-wrap">
+                      <Home size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        placeholder="যেমন: মিরপুর-১০, ঢাকা-১২১৬"
+                        value={authAddress}
+                        onChange={e => setAuthAddress(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>এনআইডি কার্ড নাম্বার (NID Card Number) *</label>
+                    <div className="auth-input-wrap">
+                      <ShieldCheck size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        placeholder="১০ থেকে ১৭ ডিজিটের NID নাম্বার"
+                        value={authNid}
+                        onChange={e => setAuthNid(e.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={17}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={authSending}
+                    className="tv-btn primary"
+                    style={{ width: '100%', height: '46px', justifyContent: 'center', marginTop: '6px', fontSize: '14px', fontWeight: 700 }}
+                  >
+                    {authSending ? '⏳ কোড পাঠানো হচ্ছে...' : '📩 সাইন আপ করে অ্যাক্টিভেশন কোড নিন'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {adminControl.supportContact && (
+            <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '12px', color: '#60a5fa' }}>
+              সাপোর্ট: {adminControl.supportContact}
             </div>
           )}
         </div>

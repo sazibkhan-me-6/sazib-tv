@@ -582,6 +582,125 @@ const CHANNELS_VERSION = 'sazib-tv-v6';
 const ADMIN_CONTROL_URL = 'https://sazib-tv-admin.vercel.app/site-control.json';
 const ADMIN_CHANNELS_URL = 'https://sazib-tv-admin.vercel.app/channels.json';
 
+export type AppLanguage = 'bn' | 'en' | 'hi' | 'ar' | 'ur';
+
+const APP_LANGUAGES: { code: AppLanguage; label: string; native: string; flag: string }[] = [
+  { code: 'bn', label: 'Bengali', native: 'বাংলা', flag: '🇧🇩' },
+  { code: 'en', label: 'English', native: 'English', flag: '🇬🇧' },
+  { code: 'hi', label: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar', label: 'Arabic', native: 'العربية', flag: '🇸🇦' },
+  { code: 'ur', label: 'Urdu', native: 'اردو', flag: '🇵🇰' },
+];
+
+const APP_COUNTRIES: { code: string; name: string; flag: string }[] = [
+  { code: 'BD', name: 'Bangladesh (বাংলাদেশ)', flag: '🇧🇩' },
+  { code: 'IN', name: 'India (ভারত)', flag: '🇮🇳' },
+  { code: 'PK', name: 'Pakistan (পাকিস্তান)', flag: '🇵🇰' },
+  { code: 'SA', name: 'Saudi Arabia (সৌদি আরব)', flag: '🇸🇦' },
+  { code: 'AE', name: 'UAE (সংযুক্ত আরব আমিরাত)', flag: '🇦🇪' },
+  { code: 'QA', name: 'Qatar (কাতার)', flag: '🇶🇦' },
+  { code: 'KW', name: 'Kuwait (কুয়েত)', flag: '🇰🇼' },
+  { code: 'MY', name: 'Malaysia (মালয়েশিয়া)', flag: '🇲🇾' },
+  { code: 'SG', name: 'Singapore (সিঙ্গাপুর)', flag: '🇸🇬' },
+  { code: 'GB', name: 'United Kingdom (যুক্তরাজ্য)', flag: '🇬🇧' },
+  { code: 'US', name: 'United States (যুক্তরাষ্ট্র)', flag: '🇺🇸' },
+  { code: 'CA', name: 'Canada (কানাডা)', flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia (অস্ট্রেলিয়া)', flag: '🇦🇺' },
+  { code: 'GLOBAL', name: 'Global / International', flag: '🌍' },
+];
+
+const UI_TEXT: Record<AppLanguage, {
+  searchPlaceholder: string;
+  login: string;
+  back: string;
+  home: string;
+  tv: string;
+  ott: string;
+  remote: string;
+  settings: string;
+  settingsTitle: string;
+  langCountryTitle: string;
+  selectCountry: string;
+  selectLanguage: string;
+  seeAll: string;
+}> = {
+  bn: {
+    searchPlaceholder: 'চ্যানেল, খেলা বা মুভি খুঁজুন...',
+    login: 'লগইন',
+    back: 'ফিরে যান',
+    home: 'হোম',
+    tv: 'টিভি',
+    ott: 'ওটিটি',
+    remote: 'রিমোট',
+    settings: 'সেটিংস',
+    settingsTitle: 'সেটিংস, ভাষা ও চ্যানেল সেটআপ',
+    langCountryTitle: 'ভাষা ও দেশ সেটআপ (LANGUAGE & COUNTRY)',
+    selectCountry: 'দেশ নির্বাচন করুন (Country)',
+    selectLanguage: 'ভাষা নির্বাচন করুন (Language)',
+    seeAll: 'সব দেখুন',
+  },
+  en: {
+    searchPlaceholder: 'Search channels, sports or movies...',
+    login: 'Login',
+    back: 'Back',
+    home: 'Home',
+    tv: 'Live TV',
+    ott: 'OTT',
+    remote: 'Remote',
+    settings: 'Settings',
+    settingsTitle: 'Settings, Language & Channels',
+    langCountryTitle: 'LANGUAGE & COUNTRY SETUP',
+    selectCountry: 'Select Country',
+    selectLanguage: 'Select Language',
+    seeAll: 'See All',
+  },
+  hi: {
+    searchPlaceholder: 'चैनल, स्पोर्ट्स या मूवी खोजें...',
+    login: 'लॉगिन',
+    back: 'वापस',
+    home: 'होम',
+    tv: 'टीवी',
+    ott: 'ओटीटी',
+    remote: 'रिमोट',
+    settings: 'सेटिंग्स',
+    settingsTitle: 'सेटिंग्स, भाषा और चैनल सेटअप',
+    langCountryTitle: 'भाषा और देश सेटअप (LANGUAGE & COUNTRY)',
+    selectCountry: 'देश चुनें (Country)',
+    selectLanguage: 'भाषा चुनें (Language)',
+    seeAll: 'सभी देखें',
+  },
+  ar: {
+    searchPlaceholder: 'ابحث عن القنوات أو الرياضة أو الأفلام...',
+    login: 'دخول',
+    back: 'رجوع',
+    home: 'الرئيسية',
+    tv: 'تلفاز',
+    ott: 'منصات',
+    remote: 'ريموت',
+    settings: 'الإعدادات',
+    settingsTitle: 'الإعدادات واللغة والقنوات',
+    langCountryTitle: 'إعداد اللغة والدولة (LANGUAGE & COUNTRY)',
+    selectCountry: 'اختر الدولة (Country)',
+    selectLanguage: 'اختر اللغة (Language)',
+    seeAll: 'عرض الكل',
+  },
+  ur: {
+    searchPlaceholder: 'چینلز، کھیل یا فلمیں تلاش کریں...',
+    login: 'لاگ ان',
+    back: 'واپس',
+    home: 'ہوم',
+    tv: 'ٹی وی',
+    ott: 'او ٹی ٹی',
+    remote: 'ریموٹ',
+    settings: 'سیٹنگز',
+    settingsTitle: 'سیٹنگز، زبان اور چینل سیٹ اپ',
+    langCountryTitle: 'زبان اور ملک سیٹ اپ (LANGUAGE & COUNTRY)',
+    selectCountry: 'ملک منتخب کریں (Country)',
+    selectLanguage: 'زبان منتخب کریں (Language)',
+    seeAll: 'سب دیکھیں',
+  },
+};
+
 export type DeviceMode = 'auto' | 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'tv';
 export type ActiveDeviceType = 'mobile' | 'tablet' | 'laptop' | 'desktop' | 'tv';
 
@@ -847,6 +966,22 @@ export default function App() {
   });
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [activeCategoryRail, setActiveCategoryRail] = useState<string | null>(null);
+  const [appLanguage, setAppLanguage] = useState<AppLanguage>(() => {
+    try {
+      const saved = localStorage.getItem('sazib_tv_language') as AppLanguage | null;
+      if (saved && ['bn', 'en', 'hi', 'ar', 'ur'].includes(saved)) return saved;
+    } catch {}
+    return 'bn';
+  });
+  const [appCountry, setAppCountry] = useState<string>(() => {
+    try {
+      return localStorage.getItem('sazib_tv_country') || 'BD';
+    } catch {
+      return 'BD';
+    }
+  });
+  const t = UI_TEXT[appLanguage];
+  const activeCountryObj = useMemo(() => APP_COUNTRIES.find(c => c.code === appCountry) || APP_COUNTRIES[0], [appCountry]);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
@@ -2770,7 +2905,7 @@ export default function App() {
           >
             <input
               ref={searchInputRef}
-              placeholder='Try searching for "Somoy TV", "Sports" or movies...'
+              placeholder={t.searchPlaceholder}
               value={query}
               onChange={e => setQuery(e.target.value)}
               onFocus={() => setFocusedId('top-search')}
@@ -2845,7 +2980,7 @@ export default function App() {
             ) : (
               <>
                 <LogIn size={16} />
-                <span className="account-name-text">Login</span>
+                <span className="account-name-text">{t.login}</span>
               </>
             )}
           </button>
@@ -2913,7 +3048,7 @@ export default function App() {
                       title="হোম ভিউতে ফিরে যান (Esc)"
                     >
                       <ChevronLeft size={18} />
-                      <span>ফিরে যান</span>
+                      <span>{t.back}</span>
                     </button>
                     <h2>
                       <span>{activeRow?.title || activeRow?.label || 'Channels'}</span>
@@ -4519,18 +4654,69 @@ export default function App() {
         </div>
       )}
 
-      {/* ADD CHANNELS MODAL */}
+      {/* ADD CHANNELS & SETTINGS MODAL */}
       {showAdd && (
         <div className="tv-modal-backdrop" onClick={() => setShowAdd(false)}>
           <div className="tv-modal" onClick={e => e.stopPropagation()}>
             <div className="tv-modal-head">
               <div>
-                <span className="tv-badge-pill">SAZIB TV SETUP</span>
-                <h2>Add Playlists & Channels</h2>
+                <span className="tv-badge-pill">SAZIB TV SETTINGS • {activeCountryObj.flag} {activeCountryObj.code}</span>
+                <h2>{t.settingsTitle}</h2>
               </div>
               <button className="tv-round-btn" onClick={() => setShowAdd(false)}>
                 <X size={18} />
               </button>
+            </div>
+
+            {/* Language & Country Setup Box */}
+            <div className="tv-preset-box lang-country-box">
+              <div className="tv-preset-title" style={{ color: '#4ade80' }}>
+                <Globe2 size={15} /> 🌐 {t.langCountryTitle}
+              </div>
+
+              <div className="lang-country-grid">
+                <div className="lang-country-field">
+                  <label>{t.selectCountry}</label>
+                  <select
+                    className="lang-country-select"
+                    value={appCountry}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setAppCountry(code);
+                      try { localStorage.setItem('sazib_tv_country', code); } catch {}
+                      const found = APP_COUNTRIES.find(c => c.code === code);
+                      showOsd(`${found?.flag || '🌍'} দেশ পরিবর্তিত হয়েছে`, found?.name || code);
+                    }}
+                  >
+                    {APP_COUNTRIES.map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="lang-country-field">
+                  <label>{t.selectLanguage}</label>
+                  <div className="lang-pills-row">
+                    {APP_LANGUAGES.map(lang => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        className={`lang-pill-btn ${appLanguage === lang.code ? 'active' : ''}`}
+                        onClick={() => {
+                          setAppLanguage(lang.code);
+                          try { localStorage.setItem('sazib_tv_language', lang.code); } catch {}
+                          showOsd(`${lang.flag} ${lang.native}`, `${activeCountryObj.flag} ${activeCountryObj.name}`);
+                        }}
+                      >
+                        <span>{lang.flag}</span>
+                        <span>{lang.native}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Device & System Mode Selection Box */}
@@ -4653,11 +4839,11 @@ export default function App() {
       {/* MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="mobile-bottom-nav">
         <button
-          className={`mob-nav-item ${focusedId === 'rail-playstore' && !active && !showPlayStoreHub && !showAdd && !showMobileConnect ? 'active' : ''}`}
+          className={`mob-nav-item ${!active && !activeCategoryRail && !showPlayStoreHub && !showAdd && !showMobileConnect ? 'active' : ''}`}
           onClick={homeSpatial}
         >
           <Home size={20} />
-          <span>হোম</span>
+          <span>{t.home}</span>
         </button>
         <button
           className={`mob-nav-item ${active || activeCategoryRail === 'rail-bd' ? 'active' : ''}`}
@@ -4672,7 +4858,7 @@ export default function App() {
           }}
         >
           <Tv size={20} />
-          <span>টিভি</span>
+          <span>{t.tv}</span>
         </button>
         <button
           className={`mob-nav-item ${showPlayStoreHub || activeOtt || activeCategoryRail === 'rail-widgets' ? 'active' : ''}`}
@@ -4683,21 +4869,21 @@ export default function App() {
           }}
         >
           <Grid size={20} />
-          <span>ওটিটি</span>
+          <span>{t.ott}</span>
         </button>
         <button
           className={`mob-nav-item ${showMobileConnect ? 'active' : ''}`}
           onClick={() => setShowMobileConnect(true)}
         >
           <Smartphone size={20} />
-          <span>রিমোট</span>
+          <span>{t.remote}</span>
         </button>
         <button
           className={`mob-nav-item ${showAdd ? 'active' : ''}`}
           onClick={() => setShowAdd(true)}
         >
           <Settings size={20} />
-          <span>সেটিংস</span>
+          <span>{t.settings}</span>
         </button>
       </nav>
 

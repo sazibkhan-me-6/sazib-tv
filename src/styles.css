@@ -3316,3 +3316,220 @@ button {
   }
 }
 
+/* ==================== LANGUAGE & COUNTRY SETUP (SETTINGS MODAL) ==================== */
+.lang-country-box {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  margin-bottom: 14px;
+}
+
+.lang-country-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.lang-country-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lang-country-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.lang-country-select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #0b1224;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.lang-country-select:focus {
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+}
+
+.lang-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lang-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-pill-btn:hover {
+  background: rgba(52, 211, 153, 0.18);
+  border-color: #34d399;
+  color: #ffffff;
+}
+
+.lang-pill-btn.active {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* ==================== PERFECT PHONE / MOBILE APP EXPERIENCE ==================== */
+@media (max-width: 640px) {
+  html, body, .sazib-tv-leanback {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sazib-tv-leanback {
+    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Clean App-Like Mobile Topbar (Zero Squishing / Overflow) */
+  .leanback-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 900 !important;
+    height: 58px !important;
+    padding: 0 10px !important;
+    gap: 8px !important;
+    background: rgba(7, 10, 20, 0.94) !important;
+    backdrop-filter: blur(14px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .topbar-left {
+    flex: 1 !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  .sazib-tv-brand-logo-img {
+    height: 26px !important;
+    max-width: 86px !important;
+  }
+
+  .assistant-search {
+    flex: 1 !important;
+    min-width: 0 !important;
+    gap: 6px !important;
+  }
+
+  .assistant-btn {
+    display: none !important;
+  }
+
+  .search-input-wrap {
+    flex: 1 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 9999px !important;
+  }
+
+  .search-input-wrap input,
+  .search-input-wrap.focused input {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+  }
+
+  /* Hide redundant desktop-only topbar icons on phone (already in Bottom Nav / Settings) */
+  #top-notif,
+  #top-cast,
+  .leanback-status > button[title="Add Channels & Playlists"] {
+    display: none !important;
+  }
+
+  .leanback-status {
+    flex-shrink: 0 !important;
+    gap: 6px !important;
+  }
+
+  .account-login-pill {
+    height: 34px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+
+  .account-login-pill.logged-in {
+    padding: 0 9px 0 5px !important;
+  }
+
+  /* Sleek Tappable Mobile Category Headers (Tap to open Grid Layout) */
+  .row-rail-btn {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 12px !important;
+    padding: 8px 12px !important;
+    position: relative !important;
+  }
+
+  .row-rail-btn::after {
+    content: 'সব দেখুন ›';
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #60a5fa;
+  }
+
+  /* Mobile Safe-Area Bottom Navigation */
+  .mobile-bottom-nav {
+    height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    background: rgba(9, 14, 28, 0.96) !important;
+    backdrop-filter: blur(18px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Modals & QR Connect Mobile-Friendly */
+  .tv-modal {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .mobile-connect-body {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .mobile-qr-img {
+    width: 180px !important;
+    height: 180px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Hide desktop keyboard tips on touch phones */
+  .tv-player-tips {
+    display: none !important;
+  }
+
+  /* Touch-friendly Player HUD */
+  .tv-player-meta b {
+    font-size: 14px !important;
+  }
+}
+

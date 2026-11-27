@@ -3821,23 +3821,6 @@ export default function App() {
                 </button>
               )}
               <button
-                className={`tv-round-btn ${isTheaterMode ? 'fav-on' : ''}`}
-                title="Theater Mode (T)"
-                onClick={toggleTheater}
-              >
-                <Film size={18} />
-              </button>
-              <button
-                className={`tv-round-btn ${device.autoRotate ? 'fav-on' : ''}`}
-                title={`অটো রোটেট (${device.autoRotate ? 'চালু' : 'বন্ধ'}) / স্ক্রিন রোটেট`}
-                onClick={() => {
-                  device.manualRotate();
-                  showOsd('🔄 স্ক্রিন রোটেট', 'ডিসপ্লে রোটেট করা হয়েছে');
-                }}
-              >
-                <RefreshCw size={18} />
-              </button>
-              <button
                 className={`tv-round-btn ${isFullscreen ? 'fav-on' : ''}`}
                 title="Full Screen Display (F)"
                 onClick={toggleFullscreen}
@@ -3954,7 +3937,7 @@ export default function App() {
               </div>
             )}
             <div className="tv-player-tips">
-              Sazib TV • <b>↑ / ↓</b> Channel change • <b>← / →</b> Volume • <b>Space / OK</b> Play/Pause • <b>T</b> Theater Mode • <b>F</b> Full Display • <b>C</b> Channel Guide • <b>Esc</b> Exit
+              Sazib TV • <b>↑ / ↓</b> Channel change • <b>← / →</b> Volume • <b>Space / OK</b> Play/Pause • <b>F</b> Full Display • <b>C</b> Channel Guide • <b>Esc</b> Exit
             </div>
           </div>
         </div>
@@ -4114,16 +4097,6 @@ export default function App() {
                 }}
               >
                 <RefreshCw size={17} />
-              </button>
-              <button
-                className={`tv-round-btn ${device.autoRotate ? 'fav-on' : ''}`}
-                title={`অটো রোটেট (${device.autoRotate ? 'চালু' : 'বন্ধ'}) / স্ক্রিন রোটেট`}
-                onClick={() => {
-                  device.manualRotate();
-                  showOsd('🔄 স্ক্রিন রোটেট', 'ডিসপ্লে রোটেট করা হয়েছে');
-                }}
-              >
-                <RefreshCw size={18} />
               </button>
               <button
                 className={`tv-round-btn ${isFullscreen ? 'fav-on' : ''}`}
@@ -5170,28 +5143,6 @@ export default function App() {
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
                   <Tv size={14} /> {t.devTv}
-                </button>
-              </div>
-
-              {/* Auto Rotate Control Row for Phones & Tablets */}
-              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <RefreshCw size={16} color={device.autoRotate ? '#4ade80' : '#94a3b8'} />
-                  <div>
-                    <b style={{ fontSize: '13px', color: '#fff' }}>{t.autoRotateTitle}</b>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{t.autoRotateSub}</div>
-                  </div>
-                </div>
-                <button
-                  className={`tv-btn ${device.autoRotate ? 'primary' : 'secondary'}`}
-                  onClick={() => {
-                    const next = !device.autoRotate;
-                    device.toggleAutoRotate();
-                    showOsd(t.autoRotateTitle, next ? t.onLabel : t.offLabel);
-                  }}
-                  style={{ fontSize: '12px', height: '34px', padding: '0 14px' }}
-                >
-                  {device.autoRotate ? t.onLabel : t.offLabel}
                 </button>
               </div>
             </div>

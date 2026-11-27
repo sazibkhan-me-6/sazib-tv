@@ -611,6 +611,9 @@ const APP_COUNTRIES: { code: string; name: string; flag: string }[] = [
 
 const UI_TEXT: Record<AppLanguage, {
   searchPlaceholder: string;
+  searchResultsFor: string;
+  clickToWatch: string;
+  noChannelsFound: string;
   login: string;
   back: string;
   home: string;
@@ -623,9 +626,75 @@ const UI_TEXT: Record<AppLanguage, {
   selectCountry: string;
   selectLanguage: string;
   seeAll: string;
+  itemsUnit: string;
+  railPlayStore: string;
+  railApps: string;
+  railWidgets: string;
+  railBd: string;
+  railIndia: string;
+  railSports: string;
+  railMovies: string;
+  railNews: string;
+  titleApps: string;
+  titleWidgets: string;
+  titleBd: string;
+  titleIndia: string;
+  titleSports: string;
+  titleMovies: string;
+  titleNews: string;
+  deviceLayoutTitle: string;
+  devAuto: string;
+  devMobile: string;
+  devTablet: string;
+  devLaptop: string;
+  devPc: string;
+  devTv: string;
+  autoRotateTitle: string;
+  autoRotateSub: string;
+  onLabel: string;
+  offLabel: string;
+  buffering: string;
+  channelGuide: string;
+  filterChannels: string;
+  streamUnavailable: string;
+  streamOfflineDesc: string;
+  nextChannelBtn: string;
+  webApp: string;
+  directLiveStream: string;
+  separateWindow: string;
+  openInChrome: string;
+  opening: string;
+  ytPlaceholder: string;
+  playSearch: string;
+  openFull: string;
+  ottVerified: string;
+  ottOpenUse: string;
+  ottWatchLiveInApp: string;
+  ottCustomLinkPh: string;
+  playBtn: string;
+  popularOtt: string;
+  storeAll: string;
+  storeOtt: string;
+  storeLive: string;
+  storeMusic: string;
+  storeTools: string;
+  storeInstalled: string;
+  storeCustom: string;
+  storeWeb: string;
+  storeSearchPh: string;
+  myAccount: string;
+  accountLogin: string;
+  createAccount: string;
+  favChannels: string;
+  totalChannels: string;
+  logoutBtn: string;
+  okBtn: string;
 }> = {
   bn: {
     searchPlaceholder: 'চ্যানেল, খেলা বা মুভি খুঁজুন...',
+    searchResultsFor: 'সার্চ ফলাফল:',
+    clickToWatch: 'সরাসরি দেখতে যেকোনো চ্যানেলে ক্লিক করুন',
+    noChannelsFound: 'কোনো চ্যানেল পাওয়া যায়নি। অন্য কিছু লিখে খুঁজুন।',
     login: 'লগইন',
     back: 'ফিরে যান',
     home: 'হোম',
@@ -637,10 +706,76 @@ const UI_TEXT: Record<AppLanguage, {
     langCountryTitle: 'ভাষা ও দেশ সেটআপ (LANGUAGE & COUNTRY)',
     selectCountry: 'দেশ নির্বাচন করুন (Country)',
     selectLanguage: 'ভাষা নির্বাচন করুন (Language)',
-    seeAll: 'সব দেখুন',
+    seeAll: 'সব দেখুন ›',
+    itemsUnit: 'টি',
+    railPlayStore: 'প্লে স্টোর',
+    railApps: 'অ্যাপস',
+    railWidgets: 'ওটিটি',
+    railBd: 'লাইভ টিভি',
+    railIndia: 'ইন্ডিয়ান টিভি',
+    railSports: 'স্পোর্টস',
+    railMovies: 'মুভিজ',
+    railNews: 'নিউজ ২৪/৭',
+    titleApps: 'অ্যান্ড্রয়েড টিভি অ্যাপস',
+    titleWidgets: 'স্মার্ট ওটিটি প্ল্যাটফর্ম',
+    titleBd: 'বাংলাদেশি লাইভ টিভি',
+    titleIndia: 'ইন্ডিয়ান লাইভ টিভি',
+    titleSports: 'লাইভ স্পোর্টস ও ক্রিকেট',
+    titleMovies: 'মুভিজ ও সিনেমা',
+    titleNews: '২৪/৭ ব্রেকিং নিউজ',
+    deviceLayoutTitle: 'ডিভাইস ও ডিসপ্লে মোড',
+    devAuto: '⚡ অটো',
+    devMobile: '📱 মোবাইল',
+    devTablet: '📲 ট্যাবলেট',
+    devLaptop: '💻 ল্যাপটপ',
+    devPc: '🖥️ পিসি',
+    devTv: '📺 টিভি',
+    autoRotateTitle: '🔄 ফোন ও ট্যাবলেট অটো-রোটেট',
+    autoRotateSub: 'ফোন বা ট্যাবলেট ঘোরালে ডিসপ্লে স্বয়ংক্রিয়ভাবে ঘুরবে',
+    onLabel: 'চালু (ON) ✓',
+    offLabel: 'বন্ধ (OFF)',
+    buffering: 'লোড হচ্ছে',
+    channelGuide: 'কুইক চ্যানেল গাইড',
+    filterChannels: 'চ্যানেল খুঁজুন...',
+    streamUnavailable: 'স্ট্রিম বর্তমানে অফলাইন',
+    streamOfflineDesc: 'এই চ্যানেলটি এখন অফলাইন আছে, অন্য চ্যানেলে সুইচ করুন।',
+    nextChannelBtn: 'পরবর্তী চ্যানেল',
+    webApp: 'ওয়েব অ্যাপ',
+    directLiveStream: 'সরাসরি লাইভ স্ট্রিম',
+    separateWindow: 'আলাদা উইন্ডো',
+    openInChrome: 'ক্রোমে খুলুন',
+    opening: 'ওপেন হচ্ছে...',
+    ytPlaceholder: 'যেকোনো YouTube লিংক দিন বা সার্চ করুন...',
+    playSearch: 'প্লে / সার্চ',
+    openFull: 'ফুল খুলুন',
+    ottVerified: 'অফিসিয়াল ওটিটি প্ল্যাটফর্ম • Full HD / 4K DRM',
+    ottOpenUse: 'ওপেন ও ব্যবহার করুন',
+    ottWatchLiveInApp: 'অ্যাপের ভেতরেই লাইভ দেখুন',
+    ottCustomLinkPh: 'অথবা যেকোনো স্ট্রিম (.m3u8 / .mp4) বা YouTube লিংক পেস্ট করুন...',
+    playBtn: 'প্লে করুন',
+    popularOtt: 'জনপ্রিয় ওটিটি:',
+    storeAll: '🌟 সকল অ্যাপস',
+    storeOtt: '🎬 ওটিটি ও সিনেমা',
+    storeLive: '📺 লাইভ টিভি ও স্পোর্টস',
+    storeMusic: '🎵 মিউজিক',
+    storeTools: '🛠️ টুলস ও প্লেয়ার',
+    storeInstalled: '⬇️ ইনস্টলকৃত',
+    storeCustom: '➕ কাস্টম অ্যাপ',
+    storeWeb: '🌐 প্লে স্টোর ওয়েব',
+    storeSearchPh: 'প্লে স্টোরে অ্যাপ খুঁজুন (যেমন: Chorki, Netflix)...',
+    myAccount: 'আমার অ্যাকাউন্ট',
+    accountLogin: 'অ্যাকাউন্ট লগইন',
+    createAccount: 'নতুন অ্যাকাউন্ট তৈরি করুন',
+    favChannels: 'প্রিয় চ্যানেল',
+    totalChannels: 'মোট চ্যানেল',
+    logoutBtn: 'সাইন আউট',
+    okBtn: 'ঠিক আছে',
   },
   en: {
     searchPlaceholder: 'Search channels, sports or movies...',
+    searchResultsFor: 'Search Results for:',
+    clickToWatch: 'Click any channel to watch immediately',
+    noChannelsFound: 'No channels found. Try another keyword.',
     login: 'Login',
     back: 'Back',
     home: 'Home',
@@ -652,10 +787,76 @@ const UI_TEXT: Record<AppLanguage, {
     langCountryTitle: 'LANGUAGE & COUNTRY SETUP',
     selectCountry: 'Select Country',
     selectLanguage: 'Select Language',
-    seeAll: 'See All',
+    seeAll: 'See All ›',
+    itemsUnit: 'items',
+    railPlayStore: 'Play Store',
+    railApps: 'Apps',
+    railWidgets: 'OTT',
+    railBd: 'Live TV',
+    railIndia: 'Indian TV',
+    railSports: 'Sports',
+    railMovies: 'Movies',
+    railNews: 'News 24/7',
+    titleApps: 'Android TV Apps',
+    titleWidgets: 'Smart OTT Platforms',
+    titleBd: 'Bangladeshi Live TV',
+    titleIndia: 'Indian Live TV',
+    titleSports: 'Live Sports & Cricket',
+    titleMovies: 'Movies & Cinema',
+    titleNews: '24/7 Breaking News',
+    deviceLayoutTitle: 'DEVICE & DISPLAY LAYOUT',
+    devAuto: '⚡ Auto',
+    devMobile: '📱 Mobile',
+    devTablet: '📲 Tablet',
+    devLaptop: '💻 Laptop',
+    devPc: '🖥️ PC',
+    devTv: '📺 TV',
+    autoRotateTitle: '🔄 Phone & Tablet Auto-Rotate',
+    autoRotateSub: 'Automatically rotate screen when turning your device',
+    onLabel: 'ON ✓',
+    offLabel: 'OFF',
+    buffering: 'Buffering',
+    channelGuide: 'Quick Channel Guide',
+    filterChannels: 'Filter channels...',
+    streamUnavailable: 'Stream Unavailable',
+    streamOfflineDesc: 'This stream is currently offline or requires authorization.',
+    nextChannelBtn: 'Switch to Next Channel',
+    webApp: 'Web App',
+    directLiveStream: 'Direct Live Stream',
+    separateWindow: 'New Window',
+    openInChrome: 'Open in Browser',
+    opening: 'Opening...',
+    ytPlaceholder: 'Paste any YouTube link or search...',
+    playSearch: 'Play / Search',
+    openFull: 'Open Full',
+    ottVerified: 'Official OTT Platform • Full HD / 4K DRM',
+    ottOpenUse: 'Open & Watch Now',
+    ottWatchLiveInApp: 'Watch Live Inside App',
+    ottCustomLinkPh: 'Or paste any stream (.m3u8 / .mp4) or YouTube link...',
+    playBtn: 'Play Now',
+    popularOtt: 'Popular OTT:',
+    storeAll: '🌟 All Apps',
+    storeOtt: '🎬 OTT & Movies',
+    storeLive: '📺 Live TV & Sports',
+    storeMusic: '🎵 Music',
+    storeTools: '🛠️ Tools & Players',
+    storeInstalled: '⬇️ Installed',
+    storeCustom: '➕ Custom App',
+    storeWeb: '🌐 Play Store Web',
+    storeSearchPh: 'Search apps in Play Store (e.g. Chorki, Netflix)...',
+    myAccount: 'My Account',
+    accountLogin: 'Account Login',
+    createAccount: 'Create New Account',
+    favChannels: 'Favorites',
+    totalChannels: 'Total Channels',
+    logoutBtn: 'Sign Out',
+    okBtn: 'Done',
   },
   hi: {
     searchPlaceholder: 'चैनल, स्पोर्ट्स या मूवी खोजें...',
+    searchResultsFor: 'खोज परिणाम:',
+    clickToWatch: 'तुरंत देखने के लिए किसी भी चैनल पर क्लिक करें',
+    noChannelsFound: 'कोई चैनल नहीं मिला। दूसरा शब्द खोजें।',
     login: 'लॉगिन',
     back: 'वापस',
     home: 'होम',
@@ -667,10 +868,76 @@ const UI_TEXT: Record<AppLanguage, {
     langCountryTitle: 'भाषा और देश सेटअप (LANGUAGE & COUNTRY)',
     selectCountry: 'देश चुनें (Country)',
     selectLanguage: 'भाषा चुनें (Language)',
-    seeAll: 'सभी देखें',
+    seeAll: 'सभी देखें ›',
+    itemsUnit: 'आइटम',
+    railPlayStore: 'प्ले स्टोर',
+    railApps: 'ऐप्स',
+    railWidgets: 'ओटीटी',
+    railBd: 'लाइव टीवी',
+    railIndia: 'इंडियन टीवी',
+    railSports: 'स्पोर्ट्स',
+    railMovies: 'मूवीज़',
+    railNews: 'न्यूज़ 24/7',
+    titleApps: 'एंड्रॉइड टीवी ऐप्स',
+    titleWidgets: 'स्मार्ट ओटीटी प्लेटफॉर्म',
+    titleBd: 'बांग्लादेशी लाइव टीवी',
+    titleIndia: 'इंडियन लाइव टीवी',
+    titleSports: 'लाइव स्पोर्ट्स और क्रिकेट',
+    titleMovies: 'मूवीज़ और सिनेमा',
+    titleNews: '24/7 ब्रेकिंग न्यूज़',
+    deviceLayoutTitle: 'डिवाइस और डिस्प्ले मोड',
+    devAuto: '⚡ ऑटो',
+    devMobile: '📱 मोबाइल',
+    devTablet: '📲 टैबलेट',
+    devLaptop: '💻 लैपटॉप',
+    devPc: '🖥️ पीसी',
+    devTv: '📺 टीवी',
+    autoRotateTitle: '🔄 फ़ोन और टैबलेट ऑटो-रोटेट',
+    autoRotateSub: 'डिवाइस घुमाने पर स्क्रीन अपने आप रोटेट होगी',
+    onLabel: 'चालू (ON) ✓',
+    offLabel: 'बंद (OFF)',
+    buffering: 'बफ़रिंग',
+    channelGuide: 'चैनल गाइड',
+    filterChannels: 'चैनल खोजें...',
+    streamUnavailable: 'स्ट्रीम उपलब्ध नहीं है',
+    streamOfflineDesc: 'यह चैनल अभी ऑफ़लाइन है, कृपया अगला चैनल देखें।',
+    nextChannelBtn: 'अगला चैनल',
+    webApp: 'वेब ऐप',
+    directLiveStream: 'लाइव स्ट्रीम',
+    separateWindow: 'नई विंडो',
+    openInChrome: 'ब्राउज़र में खोलें',
+    opening: 'खुल रहा है...',
+    ytPlaceholder: 'कोई भी YouTube लिंक पेस्ट करें या खोजें...',
+    playSearch: 'प्ले / खोजें',
+    openFull: 'पूरा खोलें',
+    ottVerified: 'ऑफिशियल ओटीटी • Full HD / 4K DRM',
+    ottOpenUse: 'खोलें और देखें',
+    ottWatchLiveInApp: 'ऐप के अंदर लाइव देखें',
+    ottCustomLinkPh: 'या कोई भी स्ट्रीम (.m3u8 / .mp4) लिंक पेस्ट करें...',
+    playBtn: 'प्ले करें',
+    popularOtt: 'लोकप्रिय ओटीटी:',
+    storeAll: '🌟 सभी ऐप्स',
+    storeOtt: '🎬 ओटीटी और मूवीज़',
+    storeLive: '📺 लाइव टीवी',
+    storeMusic: '🎵 म्यूज़िक',
+    storeTools: '🛠️ टूल्स',
+    storeInstalled: '⬇️ इंस्टॉल किए गए',
+    storeCustom: '➕ कस्टम ऐप',
+    storeWeb: '🌐 प्ले स्टोर वेब',
+    storeSearchPh: 'प्ले स्टोर में ऐप खोजें...',
+    myAccount: 'मेरा अकाउंट',
+    accountLogin: 'अकाउंट लॉगिन',
+    createAccount: 'नया अकाउंट बनाएं',
+    favChannels: 'पसंदीदा',
+    totalChannels: 'कुल चैनल',
+    logoutBtn: 'लॉगआउट',
+    okBtn: 'ठीक है',
   },
   ar: {
     searchPlaceholder: 'ابحث عن القنوات أو الرياضة أو الأفلام...',
+    searchResultsFor: 'نتائج البحث:',
+    clickToWatch: 'انقر على أي قناة للمشاهدة فوراً',
+    noChannelsFound: 'لم يتم العثور على قنوات.',
     login: 'دخول',
     back: 'رجوع',
     home: 'الرئيسية',
@@ -682,10 +949,76 @@ const UI_TEXT: Record<AppLanguage, {
     langCountryTitle: 'إعداد اللغة والدولة (LANGUAGE & COUNTRY)',
     selectCountry: 'اختر الدولة (Country)',
     selectLanguage: 'اختر اللغة (Language)',
-    seeAll: 'عرض الكل',
+    seeAll: 'عرض الكل ›',
+    itemsUnit: 'عنصر',
+    railPlayStore: 'المتجر',
+    railApps: 'التطبيقات',
+    railWidgets: 'المنصات',
+    railBd: 'بث مباشر',
+    railIndia: 'قنوات هندية',
+    railSports: 'رياضة',
+    railMovies: 'أفلام',
+    railNews: 'أخبار 24/7',
+    titleApps: 'تطبيقات التلفاز',
+    titleWidgets: 'منصات OTT الذكية',
+    titleBd: 'قنوات بنغلاديش المباشرة',
+    titleIndia: 'القنوات الهندية المباشرة',
+    titleSports: 'الرياضة المباشرة',
+    titleMovies: 'الأفلام والسينما',
+    titleNews: 'أخبار عاجلة 24/7',
+    deviceLayoutTitle: 'وضع الجهاز والشاشة',
+    devAuto: '⚡ تلقائي',
+    devMobile: '📱 جوال',
+    devTablet: '📲 تابلت',
+    devLaptop: '💻 لابتوب',
+    devPc: '🖥️ كمبيوتر',
+    devTv: '📺 تلفاز',
+    autoRotateTitle: '🔄 التدوير التلقائي للجوال والتابلت',
+    autoRotateSub: 'تدوير الشاشة تلقائياً عند قلب الجهاز',
+    onLabel: 'مفعل ✓',
+    offLabel: 'متوقف',
+    buffering: 'جاري التحميل',
+    channelGuide: 'دليل القنوات',
+    filterChannels: 'بحث في القنوات...',
+    streamUnavailable: 'البث غير متاح حالياً',
+    streamOfflineDesc: 'هذه القناة غير متصلة حالياً.',
+    nextChannelBtn: 'القناة التالية',
+    webApp: 'تطبيق الويب',
+    directLiveStream: 'بث مباشر',
+    separateWindow: 'نافذة جديدة',
+    openInChrome: 'فتح في المتصفح',
+    opening: 'جاري الفتح...',
+    ytPlaceholder: 'الصق رابط يوتيوب أو ابحث...',
+    playSearch: 'تشغيل / بحث',
+    openFull: 'فتح كامل',
+    ottVerified: 'منصة رسمية • Full HD / 4K DRM',
+    ottOpenUse: 'فتح والمشاهدة الآن',
+    ottWatchLiveInApp: 'مشاهدة البث المباشر هنا',
+    ottCustomLinkPh: 'أو الصق رابط بث (.m3u8 / .mp4)...',
+    playBtn: 'تشغيل',
+    popularOtt: 'منصات شائعة:',
+    storeAll: '🌟 كل التطبيقات',
+    storeOtt: '🎬 منصات وأفلام',
+    storeLive: '📺 بث مباشر',
+    storeMusic: '🎵 موسيقى',
+    storeTools: '🛠️ أدوات',
+    storeInstalled: '⬇️ المثبتة',
+    storeCustom: '➕ تطبيق مخصص',
+    storeWeb: '🌐 متجر جوجل',
+    storeSearchPh: 'ابحث عن تطبيق...',
+    myAccount: 'حسابي',
+    accountLogin: 'تسجيل الدخول',
+    createAccount: 'إنشاء حساب جديد',
+    favChannels: 'المفضلة',
+    totalChannels: 'كل القنوات',
+    logoutBtn: 'تسجيل الخروج',
+    okBtn: 'حسناً',
   },
   ur: {
     searchPlaceholder: 'چینلز، کھیل یا فلمیں تلاش کریں...',
+    searchResultsFor: 'تلاش کے نتائج:',
+    clickToWatch: 'فوری دیکھنے کے لیے کسی بھی چینل پر کلک کریں',
+    noChannelsFound: 'کوئی چینل نہیں ملا۔',
     login: 'لاگ ان',
     back: 'واپس',
     home: 'ہوم',
@@ -697,7 +1030,70 @@ const UI_TEXT: Record<AppLanguage, {
     langCountryTitle: 'زبان اور ملک سیٹ اپ (LANGUAGE & COUNTRY)',
     selectCountry: 'ملک منتخب کریں (Country)',
     selectLanguage: 'زبان منتخب کریں (Language)',
-    seeAll: 'سب دیکھیں',
+    seeAll: 'سب دیکھیں ›',
+    itemsUnit: 'آئٹمز',
+    railPlayStore: 'پلے اسٹور',
+    railApps: 'ایپس',
+    railWidgets: 'او ٹی ٹی',
+    railBd: 'لائیو ٹی وی',
+    railIndia: 'انڈین ٹی وی',
+    railSports: 'اسپورٹس',
+    railMovies: 'فلمیں',
+    railNews: 'نیوز 24/7',
+    titleApps: 'اینڈرائیڈ ٹی وی ایپس',
+    titleWidgets: 'اسمارٹ او ٹی ٹی پلیٹ فارمز',
+    titleBd: 'بنگلہ دیشی لائیو ٹی وی',
+    titleIndia: 'انڈین لائیو ٹی وی',
+    titleSports: 'لائیو اسپورٹس اور کرکٹ',
+    titleMovies: 'فلمیں اور سنیما',
+    titleNews: '24/7 بریکنگ نیوز',
+    deviceLayoutTitle: 'ڈیوائس اور ڈسپلے موڈ',
+    devAuto: '⚡ آٹو',
+    devMobile: '📱 موبائل',
+    devTablet: '📲 ٹیبلیٹ',
+    devLaptop: '💻 لیپ ٹاپ',
+    devPc: '🖥️ پی سی',
+    devTv: '📺 ٹی وی',
+    autoRotateTitle: '🔄 فون اور ٹیبلیٹ آٹو روٹیٹ',
+    autoRotateSub: 'ڈیوائس گھمانے پر اسکرین خودکار روٹیٹ ہوگی',
+    onLabel: 'آن ✓',
+    offLabel: 'آف',
+    buffering: 'لوڈ ہو رہا ہے',
+    channelGuide: 'چینل گائیڈ',
+    filterChannels: 'چینل تلاش کریں...',
+    streamUnavailable: 'اسٹریم دستیاب نہیں',
+    streamOfflineDesc: 'یہ چینل فی الحال آف لائن ہے۔',
+    nextChannelBtn: 'اگلا چینل',
+    webApp: 'ویب ایپ',
+    directLiveStream: 'لائیو اسٹریم',
+    separateWindow: 'نئی ونڈو',
+    openInChrome: 'براؤزر میں کھولیں',
+    opening: 'کھل رہا ہے...',
+    ytPlaceholder: 'کوئی بھی YouTube لنک پیسٹ کریں یا تلاش کریں...',
+    playSearch: 'پلے / تلاش',
+    openFull: 'مکمل کھولیں',
+    ottVerified: 'آفیشل او ٹی ٹی • Full HD / 4K DRM',
+    ottOpenUse: 'کھولیں اور دیکھیں',
+    ottWatchLiveInApp: 'ایپ کے اندر لائیو دیکھیں',
+    ottCustomLinkPh: 'یا کوئی بھی اسٹریم (.m3u8 / .mp4) لنک پیسٹ کریں...',
+    playBtn: 'پلے کریں',
+    popularOtt: 'مقبول او ٹی ٹی:',
+    storeAll: '🌟 تمام ایپس',
+    storeOtt: '🎬 او ٹی ٹی اور فلمیں',
+    storeLive: '📺 لائیو ٹی وی',
+    storeMusic: '🎵 میوزک',
+    storeTools: '🛠️ ٹولز',
+    storeInstalled: '⬇️ انسٹال شدہ',
+    storeCustom: '➕ کسٹم ایپ',
+    storeWeb: '🌐 پلے اسٹور ویب',
+    storeSearchPh: 'پلے اسٹور میں ایپ تلاش کریں...',
+    myAccount: 'میرا اکاؤنٹ',
+    accountLogin: 'اکاؤنٹ لاگ ان',
+    createAccount: 'نیا اکاؤنٹ بنائیں',
+    favChannels: 'پسندیدہ',
+    totalChannels: 'کل چینلز',
+    logoutBtn: 'لاگ آؤٹ',
+    okBtn: 'ٹھیک ہے',
   },
 };
 
@@ -2144,79 +2540,79 @@ export default function App() {
     {
       id: 'row-playstore',
       railId: 'rail-playstore',
-      label: 'Play Store',
+      label: t.railPlayStore,
       icon: <PlayStoreIcon size={24} />,
       iconClass: 'playstore-circle',
-      title: 'Google Play Store (অফিসিয়াল অ্যাপ স্টোর)',
+      title: t.railPlayStore,
       items: ['app-playstore']
     },
     {
       id: 'row-apps',
       railId: 'rail-apps',
-      label: 'Apps',
+      label: t.railApps,
       icon: <Grid size={22} color="#ffffff" />,
       iconClass: 'red-circle',
-      title: 'Android TV Apps',
+      title: t.titleApps,
       items: featuredAppsRow1.map(a => a.id)
     },
     {
       id: 'row-widgets',
       railId: 'rail-widgets',
-      label: 'Widgets',
+      label: t.railWidgets,
       icon: <Flame size={22} color="#ffffff" />,
       iconClass: 'cyan-square',
-      title: 'Smart Widgets & OTT',
+      title: t.titleWidgets,
       items: featuredAppsRow2.map(a => a.id)
     },
     {
       id: 'row-bd',
       railId: 'rail-bd',
-      label: 'Live TV',
+      label: t.railBd,
       badge: `${bdChannels.length} BD`,
       icon: <Tv size={22} color="#ffffff" />,
       iconClass: 'blue-square',
-      title: 'Bangladeshi Live TV (75 Channels)',
+      title: t.titleBd,
       items: bdChannels.map(c => c.id)
     },
     {
       id: 'row-india',
       railId: 'rail-india',
-      label: 'Indian TV',
+      label: t.railIndia,
       badge: `${indianChannels.length} IN`,
       icon: <Sparkles size={22} color="#ffffff" />,
       iconClass: 'purple-square',
-      title: 'Indian Live TV (75 Channels)',
+      title: t.titleIndia,
       items: indianChannels.map(c => c.id)
     },
     {
       id: 'row-sports',
       railId: 'rail-sports',
-      label: 'Sports',
-      badge: `${sportsChannels.length} Live`,
+      label: t.railSports,
+      badge: `${sportsChannels.length}`,
       icon: <Trophy size={22} color="#ffffff" />,
       iconClass: 'green-square',
-      title: 'Live Sports & Cricket',
+      title: t.titleSports,
       items: sportsChannels.map(c => c.id)
     },
     {
       id: 'row-movies',
       railId: 'rail-movies',
-      label: 'Movies',
+      label: t.railMovies,
       icon: <Film size={22} color="#ffffff" />,
       iconClass: 'orange-square',
-      title: 'Movies & Cinema',
+      title: t.titleMovies,
       items: movieChannels.map(c => c.id)
     },
     {
       id: 'row-news',
       railId: 'rail-news',
-      label: 'News 24/7',
+      label: t.railNews,
       icon: <Newspaper size={22} color="#ffffff" />,
       iconClass: 'crimson-square',
-      title: '24/7 Breaking News',
+      title: t.titleNews,
       items: newsChannels.map(c => c.id)
     }
-  ], [featuredAppsRow1, featuredAppsRow2, bdChannels, indianChannels, sportsChannels, movieChannels, newsChannels]);
+  ], [t, featuredAppsRow1, featuredAppsRow2, bdChannels, indianChannels, sportsChannels, movieChannels, newsChannels]);
 
   // Handle clicking or activating Left Rail button -> Open Full Grid Layout for that category
   const handleRailClick = useCallback((row: typeof navRows[0]) => {
@@ -2998,13 +3394,13 @@ export default function App() {
         {query ? (
           <section className="search-results-section">
             <div className="search-header">
-              <h2>Search Results for "{query}" ({filteredChannels.length})</h2>
-              <p>Click any channel to watch immediately</p>
+              <h2>{t.searchResultsFor} "{query}" ({filteredChannels.length})</h2>
+              <p>{t.clickToWatch}</p>
             </div>
             {filteredChannels.length === 0 ? (
               <div className="search-empty">
                 <Tv size={42} />
-                <p>No channels found. Try another search keyword.</p>
+                <p>{t.noChannelsFound}</p>
               </div>
             ) : (
               <div className="search-grid">
@@ -3052,7 +3448,7 @@ export default function App() {
                     </button>
                     <h2>
                       <span>{activeRow?.title || activeRow?.label || 'Channels'}</span>
-                      <span className="category-count-pill">{totalCount} টি</span>
+                      <span className="category-count-pill">{totalCount} {t.itemsUnit}</span>
                     </h2>
                   </div>
                 </div>
@@ -3074,7 +3470,7 @@ export default function App() {
                 {totalCount === 0 ? (
                   <div className="search-empty">
                     <Tv size={42} />
-                    <p>এই ক্যাটাগরিতে কোনো চ্যানেল পাওয়া যায়নি।</p>
+                    <p>{t.noChannelsFound}</p>
                   </div>
                 ) : isAppCategory ? (
                   <div className="category-grid-layout">
@@ -3120,7 +3516,8 @@ export default function App() {
             <div className="leanback-row" id="row-playstore">
               <LeanbackRailButton
                 id="rail-playstore"
-                label="Play Store"
+                label={t.railPlayStore}
+                seeAllText={t.seeAll}
                 icon={<PlayStoreIcon size={26} />}
                 iconClass="playstore-circle"
                 isFocused={focusedId === 'rail-playstore'}
@@ -3142,7 +3539,8 @@ export default function App() {
             <div className="leanback-row" id="row-apps">
               <LeanbackRailButton
                 id="rail-apps"
-                label="Apps"
+                label={t.railApps}
+                seeAllText={t.seeAll}
                 icon={<Grid size={22} color="#ffffff" />}
                 iconClass="red-circle"
                 isFocused={focusedId === 'rail-apps'}
@@ -3169,7 +3567,8 @@ export default function App() {
             <div className="leanback-row" id="row-widgets">
               <LeanbackRailButton
                 id="rail-widgets"
-                label="Widgets"
+                label={t.railWidgets}
+                seeAllText={t.seeAll}
                 icon={<Flame size={22} color="#ffffff" />}
                 iconClass="cyan-square"
                 isFocused={focusedId === 'rail-widgets'}
@@ -3193,7 +3592,8 @@ export default function App() {
             <div className="leanback-row" id="row-bd">
               <LeanbackRailButton
                 id="rail-bd"
-                label="Live TV"
+                label={t.railBd}
+                seeAllText={t.seeAll}
                 badge={`${bdChannels.length} BD`}
                 icon={<Tv size={22} color="#ffffff" />}
                 iconClass="blue-square"
@@ -3224,7 +3624,8 @@ export default function App() {
             <div className="leanback-row" id="row-india">
               <LeanbackRailButton
                 id="rail-india"
-                label="Indian TV"
+                label={t.railIndia}
+                seeAllText={t.seeAll}
                 badge={`${indianChannels.length} IN`}
                 icon={<Sparkles size={22} color="#ffffff" />}
                 iconClass="purple-square"
@@ -3255,8 +3656,9 @@ export default function App() {
             <div className="leanback-row" id="row-sports">
               <LeanbackRailButton
                 id="rail-sports"
-                label="Sports"
-                badge={`${sportsChannels.length} Live`}
+                label={t.railSports}
+                seeAllText={t.seeAll}
+                badge={`${sportsChannels.length}`}
                 icon={<Trophy size={22} color="#ffffff" />}
                 iconClass="green-square"
                 isFocused={focusedId === 'rail-sports'}
@@ -3286,7 +3688,8 @@ export default function App() {
             <div className="leanback-row" id="row-movies">
               <LeanbackRailButton
                 id="rail-movies"
-                label="Movies"
+                label={t.railMovies}
+                seeAllText={t.seeAll}
                 icon={<Film size={22} color="#ffffff" />}
                 iconClass="orange-square"
                 isFocused={focusedId === 'rail-movies'}
@@ -3316,7 +3719,8 @@ export default function App() {
             <div className="leanback-row" id="row-news">
               <LeanbackRailButton
                 id="rail-news"
-                label="News 24/7"
+                label={t.railNews}
+                seeAllText={t.seeAll}
                 icon={<Newspaper size={22} color="#ffffff" />}
                 iconClass="crimson-square"
                 isFocused={focusedId === 'rail-news'}
@@ -3473,7 +3877,7 @@ export default function App() {
             {isLoadingStream && !streamError && (
               <div className="tv-player-loading">
                 <div className="tv-spinner"></div>
-                <span>Buffering {active.name}...</span>
+                <span>{t.buffering} {active.name}...</span>
               </div>
             )}
 
@@ -3499,14 +3903,14 @@ export default function App() {
             {showQuickDrawer && (
               <div className="tv-quick-drawer">
                 <div className="drawer-head">
-                  <h3><Tv size={20} color="#3b82f6" /> Quick Channel Guide</h3>
+                  <h3><Tv size={20} color="#3b82f6" /> {t.channelGuide}</h3>
                   <button className="tv-round-btn" onClick={() => setShowQuickDrawer(false)}>
                     <X size={18} />
                   </button>
                 </div>
                 <div className="drawer-search">
                   <input
-                    placeholder="Filter channels..."
+                    placeholder={t.filterChannels}
                     value={drawerQuery}
                     onChange={e => setDrawerQuery(e.target.value)}
                     autoFocus
@@ -3542,10 +3946,10 @@ export default function App() {
             {streamError && (
               <div className="tv-stream-error">
                 <Tv size={42} />
-                <h3>Stream Unavailable</h3>
-                <p>This stream is currently offline or requires provider authorization.</p>
+                <h3>{t.streamUnavailable}</h3>
+                <p>{t.streamOfflineDesc}</p>
                 <button className="tv-btn primary" onClick={nextChannel}>
-                  Switch to Next Channel <ChevronRight size={16} />
+                  {t.nextChannelBtn} <ChevronRight size={16} />
                 </button>
               </div>
             )}
@@ -3571,12 +3975,12 @@ export default function App() {
               </button>
               <button
                 className="tv-round-btn tv-ott-home-btn"
-                title="হোম স্ক্রিনে ফিরে যান (Home)"
+                title={t.home}
                 onClick={homeSpatial}
                 style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', border: '1px solid #60a5fa', color: '#fff', gap: '6px', padding: '0 14px', width: 'auto', borderRadius: '14px', display: 'flex', alignItems: 'center' }}
               >
                 <Home size={18} />
-                <span style={{ fontSize: '13px', fontWeight: 700 }}>হোম</span>
+                <span style={{ fontSize: '13px', fontWeight: 700 }}>{t.home}</span>
               </button>
 
               {ottMode === 'web' && (
@@ -3647,7 +4051,7 @@ export default function App() {
                 onClick={() => setOttMode('web')}
               >
                 <Globe2 size={16} />
-                <span>ওয়েব অ্যাপ</span>
+                <span>{t.webApp}</span>
               </button>
               {activeOtt.url && (
                 <button
@@ -3655,7 +4059,7 @@ export default function App() {
                   onClick={() => setOttMode('stream')}
                 >
                   <Film size={16} />
-                  <span>সরাসরি লাইভ স্ট্রিম</span>
+                  <span>{t.directLiveStream}</span>
                 </button>
               )}
             </div>
@@ -3664,25 +4068,25 @@ export default function App() {
               {activeOtt.webUrl && (
                 <button
                   className="tv-round-btn window-btn"
-                  title="আলাদা ফুল-ফিচারড টিভি প্লেয়ার উইন্ডোতে চালান"
+                  title={t.separateWindow}
                   onClick={() => {
                     if (window.sazibApi?.openOttWindow) {
                       window.sazibApi.openOttWindow({ url: activeOtt.webUrl || '', title: activeOtt.name });
-                      showOsd('📺 আলাদা উইন্ডোতে ওপেন হয়েছে', activeOtt.name);
+                      showOsd(`📺 ${t.separateWindow}`, activeOtt.name);
                     } else {
                       window.open(activeOtt.webUrl, '_blank', 'width=1320,height=800');
                     }
                   }}
                 >
                   <MonitorPlay size={16} />
-                  <span>আলাদা উইন্ডো</span>
+                  <span>{t.separateWindow}</span>
                 </button>
               )}
 
               {activeOtt.webUrl && (
                 <button
                   className="tv-round-btn external-btn"
-                  title="Open in Chrome / Browser"
+                  title={t.openInChrome}
                   onClick={() => {
                     if (window.sazibApi?.openExternal) {
                       window.sazibApi.openExternal(activeOtt.webUrl || '');
@@ -3692,7 +4096,7 @@ export default function App() {
                   }}
                 >
                   <ExternalLink size={16} />
-                  <span>ক্রোমে খুলুন</span>
+                  <span>{t.openInChrome}</span>
                 </button>
               )}
               <button
@@ -3752,7 +4156,7 @@ export default function App() {
                         title="ক্লিক করে বন্ধ করুন"
                       >
                         <div className="loading-spinner"></div>
-                        <span>{activeOtt.name} ওপেন হচ্ছে...</span>
+                        <span>{activeOtt.name} {t.opening}</span>
                       </div>
                     )}
                     <webview
@@ -3776,7 +4180,7 @@ export default function App() {
                         const embed = extractYoutubeEmbed(ytInput);
                         if (embed) {
                           setYtEmbedUrl(embed);
-                          showOsd('▶️ YouTube চালু হয়েছে', 'ভিডিও প্লে হচ্ছে');
+                          showOsd('▶️ YouTube', t.playBtn);
                         } else if (ytInput.trim()) {
                           launchOttExternal(`https://www.youtube.com/results?search_query=${encodeURIComponent(ytInput.trim())}`, 'YouTube Search');
                         }
@@ -3786,13 +4190,13 @@ export default function App() {
                         <Search size={16} color="#94a3b8" />
                         <input
                           type="text"
-                          placeholder="যেকোনো YouTube ভিডিওর লিংক দিন বা সার্চ করুন..."
+                          placeholder={t.ytPlaceholder}
                           value={ytInput}
                           onChange={(e) => setYtInput(e.target.value)}
                         />
                       </div>
                       <button type="submit" className="tv-btn primary" style={{ height: '38px', padding: '0 16px' }}>
-                        <Play size={15} /> প্লে / সার্চ
+                        <Play size={15} /> {t.playSearch}
                       </button>
                       <button
                         type="button"
@@ -3800,7 +4204,7 @@ export default function App() {
                         style={{ height: '38px', padding: '0 14px' }}
                         onClick={() => launchOttExternal(activeOtt.webUrl || 'https://www.youtube.com', activeOtt.name)}
                       >
-                        <ExternalLink size={15} /> ফুল {activeOtt.name} খুলুন
+                        <ExternalLink size={15} /> {t.openFull} {activeOtt.name}
                       </button>
                     </form>
 
@@ -3847,10 +4251,10 @@ export default function App() {
                         </div>
                         <div className="ott-launcher-info">
                           <div className="ott-verified-pill">
-                            <ShieldCheck size={13} /> অফিসিয়াল ওটিটি প্ল্যাটফর্ম • Full HD / 4K DRM
+                            <ShieldCheck size={13} /> {t.ottVerified}
                           </div>
                           <h2>{activeOtt.name}</h2>
-                          <p>{activeOtt.description || activeOtt.subtitle || 'আপনার প্রিয় সিনেমা, নাটক, ওয়েব সিরিজ এবং লাইভ স্পোর্টস উপভোগ করুন।'}</p>
+                          <p>{activeOtt.description || activeOtt.subtitle || 'Watch your favorite movies, dramas, web series and live sports.'}</p>
                         </div>
                       </div>
 
@@ -3861,7 +4265,7 @@ export default function App() {
                             onClick={() => launchOttExternal(activeOtt.webUrl || '', activeOtt.name)}
                           >
                             <ExternalLink size={20} />
-                            <span>🚀 {activeOtt.name} ওপেন ও ব্যবহার করুন</span>
+                            <span>🚀 {activeOtt.name} • {t.ottOpenUse}</span>
                           </button>
                         )}
                         {activeOtt.url && (
@@ -3870,7 +4274,7 @@ export default function App() {
                             onClick={() => setOttMode('stream')}
                           >
                             <Play size={19} />
-                            <span>📺 অ্যাপের ভেতরেই লাইভ দেখুন</span>
+                            <span>📺 {t.ottWatchLiveInApp}</span>
                           </button>
                         )}
                       </div>
@@ -3900,18 +4304,18 @@ export default function App() {
                       >
                         <input
                           type="text"
-                          placeholder="অথবা যেকোনো সরাসরি স্ট্রিম (.m3u8 / .mp4) বা YouTube লিংক পেস্ট করে এখানেই দেখুন..."
+                          placeholder={t.ottCustomLinkPh}
                           value={ottCustomLink}
                           onChange={(e) => setOttCustomLink(e.target.value)}
                         />
                         <button type="submit" className="tv-btn primary" style={{ height: '40px', padding: '0 16px', whiteSpace: 'nowrap' }}>
-                          <Play size={15} /> প্লে করুন
+                          <Play size={15} /> {t.playBtn}
                         </button>
                       </form>
 
                       {/* Quick Switch Popular OTT Platforms */}
                       <div className="ott-quick-switch-row">
-                        <span className="ott-quick-label">জনপ্রিয় ওটিটি:</span>
+                        <span className="ott-quick-label">{t.popularOtt}</span>
                         {['app-netflix', 'app-chorki', 'app-toffee', 'app-hoichoi', 'app-youtube', 'app-prime', 'app-bongo', 'app-tsports'].map(id => {
                           const targetApp = ALL_STORE_APPS.find(a => a.id === id);
                           if (!targetApp) return null;
@@ -3991,21 +4395,21 @@ export default function App() {
           {/* Store Categories Tab Bar */}
           <div className="tv-store-tabs">
             {[
-              { id: 'all', label: '🌟 সকল অ্যাপস' },
-              { id: 'ott', label: '🎬 ওটিটি ও সিনেমা' },
-              { id: 'live', label: '📺 লাইভ টিভি ও স্পোর্টস' },
-              { id: 'music', label: '🎵 মিউজিক' },
-              { id: 'tools', label: '🛠️ টুলস ও প্লেয়ার' },
-              { id: 'installed', label: `⬇️ ইনস্টলকৃত অ্যাপস (${installedAppIds.length})` },
-              { id: 'custom', label: '➕ নতুন কাস্টম অ্যাপ ইনস্টল' },
-              { id: 'web', label: '🌐 গুগল প্লে ওয়েব (Play.google.com)' }
-            ].map(t => (
+              { id: 'all', label: t.storeAll },
+              { id: 'ott', label: t.storeOtt },
+              { id: 'live', label: t.storeLive },
+              { id: 'music', label: t.storeMusic },
+              { id: 'tools', label: t.storeTools },
+              { id: 'installed', label: `${t.storeInstalled} (${installedAppIds.length})` },
+              { id: 'custom', label: t.storeCustom },
+              { id: 'web', label: t.storeWeb }
+            ].map(tab => (
               <button
-                key={t.id}
-                className={`tv-store-tab ${storeCategory === t.id ? 'active' : ''}`}
-                onClick={() => setStoreCategory(t.id)}
+                key={tab.id}
+                className={`tv-store-tab ${storeCategory === tab.id ? 'active' : ''}`}
+                onClick={() => setStoreCategory(tab.id)}
               >
-                {t.label}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -4016,7 +4420,7 @@ export default function App() {
             {storeCategory !== 'web' && storeCategory !== 'custom' && (
               <div style={{ marginBottom: '22px', maxWidth: '420px' }}>
                 <input
-                  placeholder="প্লে স্টোরে অ্যাপ খুঁজুন (যেমন: Chorki, Hotstar, VLC)..."
+                  placeholder={t.storeSearchPh}
                   value={storeSearch}
                   onChange={e => setStoreSearch(e.target.value)}
                   style={{
@@ -4191,7 +4595,7 @@ export default function App() {
                 <div>
                   <span className="tv-badge-pill">SAZIB TV ACCOUNT</span>
                   <h2 style={{ fontSize: '20px', margin: '2px 0 0' }}>
-                    {currentUser ? 'আমার অ্যাকাউন্ট' : (authTab === 'login' ? 'অ্যাকাউন্ট লগইন' : 'নতুন অ্যাকাউন্ট তৈরি করুন')}
+                    {currentUser ? t.myAccount : (authTab === 'login' ? t.accountLogin : t.createAccount)}
                   </h2>
                 </div>
               </div>
@@ -4231,14 +4635,14 @@ export default function App() {
                     <Heart size={18} color="#f43f5e" />
                     <div>
                       <b>{favorites.length}</b>
-                      <small>প্রিয় চ্যানেল</small>
+                      <small>{t.favChannels}</small>
                     </div>
                   </div>
                   <div className="account-stat-box">
                     <Tv size={18} color="#38bdf8" />
                     <div>
                       <b>{channels.length}</b>
-                      <small>মোট চ্যানেল</small>
+                      <small>{t.totalChannels}</small>
                     </div>
                   </div>
                 </div>
@@ -4249,14 +4653,14 @@ export default function App() {
                     style={{ flex: 1, justifyContent: 'center', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.35)' }}
                     onClick={handleAccountLogout}
                   >
-                    <LogOut size={16} /> সাইন আউট (Logout)
+                    <LogOut size={16} /> {t.logoutBtn}
                   </button>
                   <button
                     className="tv-btn primary"
                     style={{ flex: 1, justifyContent: 'center' }}
                     onClick={() => setShowAccountModal(false)}
                   >
-                    ঠিক আছে
+                    {t.okBtn}
                   </button>
                 </div>
               </div>
@@ -4722,50 +5126,50 @@ export default function App() {
             {/* Device & System Mode Selection Box */}
             <div className="tv-preset-box" style={{ background: '#111b33', borderColor: '#38bdf8' }}>
               <div className="tv-preset-title" style={{ color: '#38bdf8' }}>
-                <Monitor size={15} /> ডিভাইস ও ডিসপ্লে মোড (DEVICE & SYSTEM LAYOUT)
+                <Monitor size={15} /> {t.deviceLayoutTitle}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginTop: '10px' }}>
                 <button
                   className={`tv-btn secondary ${device.deviceOverride === 'auto' ? 'primary' : ''}`}
-                  onClick={() => { device.updateDeviceMode('auto'); showOsd('⚡ অটো মোড সক্রিয়', `ডিটেক্টেড: ${device.detectedType.toUpperCase()}`); }}
+                  onClick={() => { device.updateDeviceMode('auto'); showOsd(t.devAuto, device.detectedType.toUpperCase()); }}
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
-                  <Sparkles size={14} /> ⚡ অটো (Auto)
+                  <Sparkles size={14} /> {t.devAuto}
                 </button>
                 <button
                   className={`tv-btn secondary ${device.activeDevice === 'mobile' ? 'primary' : ''}`}
-                  onClick={() => { device.updateDeviceMode('mobile'); showOsd('📱 মোবাইল মোড সক্রিয়', 'স্মার্টফোন টাচ ও বটম বার লেআউট'); }}
+                  onClick={() => { device.updateDeviceMode('mobile'); showOsd(t.devMobile, t.deviceLayoutTitle); }}
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
-                  <Smartphone size={14} /> 📱 মোবাইল
+                  <Smartphone size={14} /> {t.devMobile}
                 </button>
                 <button
                   className={`tv-btn secondary ${device.activeDevice === 'tablet' ? 'primary' : ''}`}
-                  onClick={() => { device.updateDeviceMode('tablet'); showOsd('📲 ট্যাবলেট মোড সক্রিয়', 'আইপ্যাড ও ট্যাবলেট অপ্টিমাইজড ভিউ'); }}
+                  onClick={() => { device.updateDeviceMode('tablet'); showOsd(t.devTablet, t.deviceLayoutTitle); }}
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
-                  <Tablet size={14} /> 📲 ট্যাবলেট
+                  <Tablet size={14} /> {t.devTablet}
                 </button>
                 <button
                   className={`tv-btn secondary ${device.activeDevice === 'laptop' ? 'primary' : ''}`}
-                  onClick={() => { device.updateDeviceMode('laptop'); showOsd('💻 ল্যাপটপ মোড সক্রিয়', 'মাউস ও ট্র্যাকপ্যাড অপ্টিমাইজড'); }}
+                  onClick={() => { device.updateDeviceMode('laptop'); showOsd(t.devLaptop, t.deviceLayoutTitle); }}
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
-                  <Laptop size={14} /> 💻 ল্যাপটপ
+                  <Laptop size={14} /> {t.devLaptop}
                 </button>
                 <button
                   className={`tv-btn secondary ${device.activeDevice === 'desktop' ? 'primary' : ''}`}
-                  onClick={() => { device.updateDeviceMode('desktop'); showOsd('🖥️ পিসি মোড সক্রিয়', 'ওয়াইডস্ক্রিন ও মাল্টি-উইন্ডো মোড'); }}
+                  onClick={() => { device.updateDeviceMode('desktop'); showOsd(t.devPc, t.deviceLayoutTitle); }}
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
-                  <Monitor size={14} /> 🖥️ পিসি
+                  <Monitor size={14} /> {t.devPc}
                 </button>
                 <button
                   className={`tv-btn secondary ${device.activeDevice === 'tv' ? 'primary' : ''}`}
-                  onClick={() => { device.updateDeviceMode('tv'); showOsd('📺 স্মার্ট টিভি মোড সক্রিয়', '১০-ফুট লিনব্যাক ও ডি-প্যাড রিমোট ভিউ'); }}
+                  onClick={() => { device.updateDeviceMode('tv'); showOsd(t.devTv, t.deviceLayoutTitle); }}
                   style={{ fontSize: '12px', justifyContent: 'center', height: '38px', padding: '0 8px' }}
                 >
-                  <Tv size={14} /> 📺 টিভি
+                  <Tv size={14} /> {t.devTv}
                 </button>
               </div>
 
@@ -4774,8 +5178,8 @@ export default function App() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <RefreshCw size={16} color={device.autoRotate ? '#4ade80' : '#94a3b8'} />
                   <div>
-                    <b style={{ fontSize: '13px', color: '#fff' }}>🔄 ফোন ও ট্যাবলেট অটো-রোটেট (Auto-Rotate)</b>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>ফোন বা ট্যাবলেট ঘোরালে ডিসপ্লে স্বয়ংক্রিয়ভাবে পোর্ট্রেট ও ল্যান্ডস্কেপ হবে</div>
+                    <b style={{ fontSize: '13px', color: '#fff' }}>{t.autoRotateTitle}</b>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{t.autoRotateSub}</div>
                   </div>
                 </div>
                 <button
@@ -4783,14 +5187,11 @@ export default function App() {
                   onClick={() => {
                     const next = !device.autoRotate;
                     device.toggleAutoRotate();
-                    showOsd(
-                      next ? '🔄 অটো রোটেট চালু' : '🔒 অটো রোটেট বন্ধ',
-                      next ? 'ফোন বা ট্যাবলেট ঘোরালে স্ক্রিন স্বয়ংক্রিয় রোটেট হবে' : 'স্ক্রিন রোটেশন লক করা হয়েছে'
-                    );
+                    showOsd(t.autoRotateTitle, next ? t.onLabel : t.offLabel);
                   }}
                   style={{ fontSize: '12px', height: '34px', padding: '0 14px' }}
                 >
-                  {device.autoRotate ? 'চালু (ON) ✓' : 'বন্ধ (OFF)'}
+                  {device.autoRotate ? t.onLabel : t.offLabel}
                 </button>
               </div>
             </div>
@@ -4909,6 +5310,7 @@ export default function App() {
 function LeanbackRailButton({
   id,
   label,
+  seeAllText,
   icon,
   badge,
   iconClass,
@@ -4918,6 +5320,7 @@ function LeanbackRailButton({
 }: {
   id: string;
   label: string;
+  seeAllText?: string;
   icon: React.ReactNode;
   badge?: string;
   iconClass: string;
@@ -4930,6 +5333,7 @@ function LeanbackRailButton({
       id={id}
       type="button"
       className={`row-rail-btn ${isFocused ? 'focused' : ''}`}
+      data-see-all={seeAllText || 'See All ›'}
       onMouseEnter={onFocus}
       onClick={onClick}
       title={`${label} - Click to navigate or browse`}

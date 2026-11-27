@@ -3489,7 +3489,7 @@ button {
   }
 
   .row-rail-btn::after {
-    content: 'সব দেখুন ›';
+    content: attr(data-see-all);
     margin-left: auto;
     font-size: 12px;
     font-weight: 700;

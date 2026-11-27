@@ -846,6 +846,7 @@ export default function App() {
     }
   });
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [activeCategoryRail, setActiveCategoryRail] = useState<string | null>(null);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
@@ -2082,23 +2083,24 @@ export default function App() {
     }
   ], [featuredAppsRow1, featuredAppsRow2, bdChannels, indianChannels, sportsChannels, movieChannels, newsChannels]);
 
-  // Handle clicking or activating Left Rail button
+  // Handle clicking or activating Left Rail button -> Open Full Grid Layout for that category
   const handleRailClick = useCallback((row: typeof navRows[0]) => {
     setMessage(`📂 ${row.title}`);
     if (row.railId === 'rail-playstore') {
       setShowPlayStoreHub(true);
       return;
     }
-    const rowEl = document.getElementById(row.id);
-    if (rowEl) {
-      rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    setActiveCategoryRail(row.railId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const mainEl = document.querySelector('.sazib-tv-leanback');
+    if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     if (row.items && row.items.length > 0) {
       setFocusedId(row.items[0]);
     } else {
       setFocusedId(row.railId);
     }
-  }, [openOttApp]);
+    showOsd(`📂 ${row.label}`, `${row.items.length} টি আইটেম গ্রিড লেআউটে দেখানো হচ্ছে`);
+  }, [showOsd]);
 
   // 2D Spatial Navigation
   const navigateSpatial = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
@@ -2266,6 +2268,8 @@ export default function App() {
       setShowMobileConnect(false);
     } else if (query) {
       setQuery('');
+    } else if (activeCategoryRail) {
+      setActiveCategoryRail(null);
     } else {
       // Jump back to Left Rail button of current row
       const cardRow = navRows.find(r => r.items.includes(focusedId));
@@ -2273,7 +2277,7 @@ export default function App() {
         setFocusedId(cardRow.railId);
       }
     }
-  }, [showAccountModal, showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, showQuickDrawer, closePlayer, showAdd, showMobileConnect, query, navRows, focusedId]);
+  }, [showAccountModal, showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, showQuickDrawer, closePlayer, showAdd, showMobileConnect, query, activeCategoryRail, navRows, focusedId]);
 
   const homeSpatial = useCallback(() => {
     if (showAccountModal) setShowAccountModal(false);
@@ -2289,6 +2293,7 @@ export default function App() {
     if (showAdd) setShowAdd(false);
     if (showMobileConnect) setShowMobileConnect(false);
     if (query) setQuery('');
+    if (activeCategoryRail) setActiveCategoryRail(null);
     setStoreCategory('all');
     setStoreSearch('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2299,7 +2304,7 @@ export default function App() {
     if (rowEl) rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showOsd('🏠 হোম স্ক্রিন', 'Sazib TV Home');
     setMessage('🏠 Sazib TV Home');
-  }, [showAccountModal, showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, closePlayer, showQuickDrawer, showAdd, showMobileConnect, query, showOsd]);
+  }, [showAccountModal, showGoogleModal, showPlayStoreHub, activeOtt, closeOtt, active, closePlayer, showQuickDrawer, showAdd, showMobileConnect, query, activeCategoryRail, showOsd]);
 
   // Auto-scroll when focusedId changes
   useEffect(() => {
@@ -2883,6 +2888,96 @@ export default function App() {
               </div>
             )}
           </section>
+        ) : activeCategoryRail ? (
+          /* FULL-DISPLAY GRID LAYOUT FOR SELECTED CATEGORY RAIL BUTTON */
+          (() => {
+            const activeRow = navRows.find(r => r.railId === activeCategoryRail);
+            const isAppCategory = activeCategoryRail === 'rail-apps' || activeCategoryRail === 'rail-widgets';
+            const gridApps = activeCategoryRail === 'rail-apps' ? featuredAppsRow1 : featuredAppsRow2;
+            const gridChannels =
+              activeCategoryRail === 'rail-bd' ? bdChannels :
+              activeCategoryRail === 'rail-india' ? indianChannels :
+              activeCategoryRail === 'rail-sports' ? sportsChannels :
+              activeCategoryRail === 'rail-movies' ? movieChannels :
+              activeCategoryRail === 'rail-news' ? newsChannels :
+              channels;
+            const totalCount = isAppCategory ? gridApps.length : gridChannels.length;
+
+            return (
+              <section className="category-grid-section">
+                <div className="category-grid-header">
+                  <div className="category-grid-title-wrap">
+                    <button
+                      className="category-back-btn"
+                      onClick={() => setActiveCategoryRail(null)}
+                      title="হোম ভিউতে ফিরে যান (Esc)"
+                    >
+                      <ChevronLeft size={18} />
+                      <span>ফিরে যান</span>
+                    </button>
+                    <h2>
+                      <span>{activeRow?.title || activeRow?.label || 'Channels'}</span>
+                      <span className="category-count-pill">{totalCount} টি</span>
+                    </h2>
+                  </div>
+                </div>
+
+                {/* Quick Switch Category Pills */}
+                <div className="category-grid-pills">
+                  {navRows.filter(r => r.railId !== 'rail-playstore').map(r => (
+                    <button
+                      key={r.railId}
+                      className={`category-switch-pill ${activeCategoryRail === r.railId ? 'active' : ''}`}
+                      onClick={() => handleRailClick(r)}
+                    >
+                      <span>{r.label}</span>
+                      <span style={{ opacity: 0.75, fontSize: '11px' }}>({r.items.length})</span>
+                    </button>
+                  ))}
+                </div>
+
+                {totalCount === 0 ? (
+                  <div className="search-empty">
+                    <Tv size={42} />
+                    <p>এই ক্যাটাগরিতে কোনো চ্যানেল পাওয়া যায়নি।</p>
+                  </div>
+                ) : isAppCategory ? (
+                  <div className="category-grid-layout">
+                    {gridApps.map(app => (
+                      <LeanbackAppCard
+                        key={app.id}
+                        app={app}
+                        isFocused={focusedId === app.id}
+                        onFocus={() => setFocusedId(app.id)}
+                        onClick={() => {
+                          if (app.id === 'app-playstore') setShowPlayStoreHub(true);
+                          else openOttApp(app);
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="category-grid-layout">
+                    {gridChannels.map(c => (
+                      <LeanbackChannelCard
+                        key={c.id}
+                        channel={c}
+                        isFocused={focusedId === c.id}
+                        isFav={favorites.includes(c.id)}
+                        onPlay={() => {
+                          setActive(c);
+                          showOsd(c.name, c.group || 'Live TV', c.logo);
+                        }}
+                        onFocus={() => setFocusedId(c.id)}
+                        onFav={() => toggleFav(c)}
+                        onDelete={() => deleteChannel(c.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })()
         ) : (
           /* STANDARD LEANBACK ROWS (EXACTLY LIKE USER'S IMAGE) */
           <div className="leanback-rows">
@@ -4565,14 +4660,14 @@ export default function App() {
           <span>হোম</span>
         </button>
         <button
-          className={`mob-nav-item ${active ? 'active' : ''}`}
+          className={`mob-nav-item ${active || activeCategoryRail === 'rail-bd' ? 'active' : ''}`}
           onClick={() => {
             if (active) {
               setShowQuickDrawer(true);
             } else {
-              const el = document.getElementById('row-somoy') || document.getElementById('row-sports');
-              el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              showOsd('📺 সরাসরি লাইভ টিভি', 'চ্যানেল লিস্ট স্ক্রল করা হয়েছে');
+              setActiveCategoryRail('rail-bd');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              showOsd('📺 সরাসরি লাইভ টিভি', 'সব চ্যানেল গ্রিড লেআউটে দেখানো হচ্ছে');
             }
           }}
         >
@@ -4580,11 +4675,11 @@ export default function App() {
           <span>টিভি</span>
         </button>
         <button
-          className={`mob-nav-item ${showPlayStoreHub || activeOtt ? 'active' : ''}`}
+          className={`mob-nav-item ${showPlayStoreHub || activeOtt || activeCategoryRail === 'rail-widgets' ? 'active' : ''}`}
           onClick={() => {
-            const el = document.getElementById('row-widgets') || document.getElementById('row-apps');
-            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            showOsd('🎬 ওটিটি ও অ্যাপস', 'ইউটিউব, নেটফ্লিক্স, চরকি, টফি...');
+            setActiveCategoryRail('rail-widgets');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showOsd('🎬 ওটিটি ও অ্যাপস', 'সব ওটিটি প্ল্যাটফর্ম গ্রিড লেআউটে দেখানো হচ্ছে');
           }}
         >
           <Grid size={20} />
